@@ -63,7 +63,15 @@ const campusData = {
 
 const cleanStudentName = (name) => {
   if (!name) return 'Student';
-  return String(name).replace(/^undefined\s*/gi, '').trim();
+  let cleaned = String(name)
+    .replace(/^undefined\s*/gi, '')
+    .replace(/\s*\(Hons\).*/gi, '')
+    .replace(/\s*-\s*(BSc|BTech|Civil|Software|Data Science|Computer Science|IT|ICT|Logistics|Nursing|Management|Spatial|Quantity|Law|Criminology|Strategic).*/gi, '')
+    .replace(/,\s*Social Sciences & Humanities.*/gi, '')
+    .replace(/\s*(Civil|Engineering|Computing|Logistics|Humanities|Management|Science|Data|Software|Architecture|Nursing|Pharmacy)\s*$/gi, '')
+    .trim();
+
+  return cleaned || 'Student';
 };
 
 // Helper for avatar initials and colors
@@ -195,7 +203,8 @@ function App() {
         }
       }
 
-      let namePart = line.replace(studentId, '').replace(/\b\d+(\.\d+)?\b/g, '').replace(/1st Year|2nd Year|3rd Year|4th Year|Faculty of \w+|BSc|Engineering|Computing|Management/gi, '').trim();
+      let rawName = line.replace(studentId, '').replace(/\b\d+(\.\d+)?\b/g, '').replace(/1st Year|2nd Year|3rd Year|4th Year|Faculty of \w+|BSc|Engineering|Computing|Management/gi, '').trim();
+      let namePart = cleanStudentName(rawName);
       if (!namePart || namePart.length < 2) namePart = `Student ${studentId}`;
 
       const academicYear = line.includes('1st Year') ? '1st Year' : line.includes('2nd Year') ? '2nd Year' : line.includes('3rd Year') ? '3rd Year' : line.includes('4th Year') ? '4th Year' : '1st Year';
