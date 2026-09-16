@@ -617,6 +617,31 @@ function App() {
     doc.save('kdu-ai-group-formation-results.pdf');
   };
 
+  const downloadGroupsExcel = () => {
+    if (groups.length === 0) return;
+
+    const exportRows = groups.flatMap((group, groupIndex) => 
+      group.map((student) => ({
+        "Team": `Team ${String(groupIndex + 1).padStart(2, '0')}`,
+        "Student ID": student.student_id,
+        "Full Name": cleanStudentName(student.full_name),
+        "Degree Program": student.degree_program
+      }))
+    );
+
+    const ws = XLSX.utils.json_to_sheet(exportRows);
+    ws['!cols'] = [
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 30 },
+      { wch: 45 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "AI Teams Allocation");
+    XLSX.writeFile(wb, "KDU_AI_Group_Formation_Results.xlsx");
+  };
+
   const filteredStudents = students.filter(s => 
     s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1504,9 +1529,14 @@ function App() {
               <h2 className="panel-title" style={{ color: '#34d399' }}>
                 <span>🎯</span> Optimized Team Allocations ({groups.length} Teams)
               </h2>
-              <button className="btn-action-pdf" onClick={downloadGroupsPDF}>
-                <span>📄</span> Export PDF Report
-              </button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button className="btn-action-pdf" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }} onClick={downloadGroupsExcel}>
+                  <span>📗</span> Export Excel (.xlsx)
+                </button>
+                <button className="btn-action-pdf" onClick={downloadGroupsPDF}>
+                  <span>📄</span> Export PDF Report
+                </button>
+              </div>
             </div>
 
             <div className="teams-grid">
