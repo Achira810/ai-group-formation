@@ -102,7 +102,7 @@ Lecturers can upload an Excel/CSV file with the following column headers:
 | Student ID | Full Name | Academic Year | Faculty | Degree Program | Score |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `D/BIT/24/0001` | Achira Hathsidu | `1st Year` | Faculty of Computing | BSc (Hons) Computer Science | `1.854` |
-| `D/BIT/23/0045` | Kasun Perera | `2nd Year` | Faculty of Computing | BSc (Hons) Software Engineering | `3.75` |
+| `D/DBA/25/0031` | D.L. Niluminda | `2nd Year` | Faculty of Computing | BSc (Hons) Data Science and Business Anelytics | `3.75` |
 
 ---
 
