@@ -333,8 +333,18 @@ function App() {
   };
 
   useEffect(() => {
-    fetchStudents();
+    clearOnStartup();
   }, []);
+
+  const clearOnStartup = async () => {
+    try {
+      await supabase.from('students').delete().not('id', 'is', null);
+    } catch (err) {
+      console.log("Startup clear error:", err);
+    }
+    setStudents([]);
+    setGroups([]);
+  };
 
   const fetchStudents = async () => {
     let { data, error } = await supabase.from('students').select('*');
