@@ -1,0 +1,8 @@
+{
+  "name": "ai-group-formation-backend",
+  "private": true,
+  "scripts": {
+    "dev": "node run-dev.js",
+    "start": "node run-dev.js"
+  }
+}
