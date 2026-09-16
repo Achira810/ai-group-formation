@@ -61,12 +61,20 @@ const campusData = {
   ]
 };
 
+const cleanStudentName = (name) => {
+  if (!name) return 'Student';
+  return String(name).replace(/^undefined\s*/gi, '').trim();
+};
+
 // Helper for avatar initials and colors
 const getInitials = (name) => {
-  if (!name) return 'ST';
-  const parts = name.trim().split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+  const cleaned = cleanStudentName(name);
+  if (!cleaned) return 'ST';
+  const parts = cleaned.split(' ');
+  if (parts.length >= 2 && parts[0] && parts[1] && parts[0][0] && parts[1][0]) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return cleaned.slice(0, 2).toUpperCase();
 };
 
 const getAvatarBg = (id) => {
@@ -1393,7 +1401,7 @@ function App() {
                             <div className="avatar-circle" style={{ background: getAvatarBg(student.student_id || 'ST') }}>
                               {getInitials(student.full_name)}
                             </div>
-                            <span style={{ fontWeight: '600' }}>{student.full_name}</span>
+                            <span style={{ fontWeight: '600' }}>{cleanStudentName(student.full_name)}</span>
                           </div>
                         </td>
                         <td style={{ fontFamily: 'monospace', color: '#818cf8' }}>{student.student_id}</td>
@@ -1512,7 +1520,7 @@ function App() {
                               {getInitials(student.full_name)}
                             </div>
                             <div>
-                              <p className="member-name">{student.full_name}</p>
+                              <p className="member-name">{cleanStudentName(student.full_name)}</p>
                               <p className="member-degree">{student.degree_program}</p>
                             </div>
                           </div>
