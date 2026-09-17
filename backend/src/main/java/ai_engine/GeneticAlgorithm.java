@@ -12,23 +12,11 @@ public class GeneticAlgorithm {
     public List<List<Student>> population = new ArrayList<>();
     private final int GROUP_SIZE = 5; 
 
-    // 1. Initial Population Generation
+    // 1. Initial Population Generation (AI Concept 2: K-Means Stratified Seeding)
     public void generateInitialPopulation(List<Student> allStudents) {
-        System.out.println("Generating random student groups...");
-        Collections.shuffle(allStudents); // Random shuffle karala base eka hadanawa
-        
-        List<Student> currentGroup = new ArrayList<>();
-        for (Student s : allStudents) {
-            currentGroup.add(s);
-            if (currentGroup.size() == GROUP_SIZE) {
-                population.add(currentGroup);
-                currentGroup = new ArrayList<>(); // Aluth group ekak patan gannawa
-            }
-        }
-        // Ithuru wechu lamayi innawanm anthima group ekata danawa
-        if (!currentGroup.isEmpty()) {
-            population.add(currentGroup);
-        }
+        System.out.println("Stratifying student cohort using K-Means Clustering (k=3)...");
+        this.population = KMeans.stratifyIntoTeams(allStudents, GROUP_SIZE, 3);
+        System.out.println("Formed " + population.size() + " initial groups stratified across performance tiers.");
     }
 
     // 2. Fitness Function (Checking if groups are balanced)

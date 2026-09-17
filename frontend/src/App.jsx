@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable';
 import heroBanner from './assets/hero-banner.jpg';
 import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist';
+import { runKMeans, stratifyByKMeans } from './ai/kmeans';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
@@ -102,6 +103,7 @@ const getAvatarBg = (id) => {
 function App() {
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]); 
+  const [clusterStats, setClusterStats] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
   
@@ -353,6 +355,7 @@ function App() {
     }
     setStudents([]);
     setGroups([]);
+    setClusterStats([]);
   };
 
   const fetchStudents = async () => {
@@ -457,6 +460,7 @@ function App() {
 
     setStudents([]);
     setGroups([]);
+    setClusterStats([]);
   };
 
   const runAIEngine = () => {
@@ -488,21 +492,12 @@ function App() {
         return;
       }
 
-      let sortedStudents = [...students].sort((a, b) => b.technical_score - a.technical_score);
-      let currentGroups = Array.from({ length: numTeams }, () => []);
+      // AI Concept 2: K-Means Clustering Tier Stratification (k=3)
+      const kResult = runKMeans(students, 3);
+      setClusterStats(kResult.clusterStats);
 
-      let forward = true;
-      let teamIndex = 0;
-      sortedStudents.forEach((student) => {
-        currentGroups[teamIndex].push(student);
-        if (forward) {
-          teamIndex++;
-          if (teamIndex === numTeams) { teamIndex--; forward = false; }
-        } else {
-          teamIndex--;
-          if (teamIndex < 0) { teamIndex++; forward = true; }
-        }
-      });
+      // Seed initial population using K-Means stratified sampling across performance tiers
+      let currentGroups = stratifyByKMeans(students, numTeams, 3);
 
       const getSystemDifference = (groupsState) => {
         let maxAvg = -Infinity;
@@ -1539,6 +1534,47 @@ function App() {
               </div>
             </div>
 
+            {/* 3-STAGE AI PIPELINE ARCHITECTURE BANNER */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '12px',
+              marginBottom: '20px',
+              padding: '14px 18px',
+              background: 'rgba(15, 23, 42, 0.65)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>🧩</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '700' }}>AI Concept 1</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#c7d2fe' }}>Fuzzy Logic Profiler</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>Z-Score & GPA Normalization</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>📊</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '700' }}>AI Concept 2</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#6ee7b7' }}>K-Means Clustering (k=3)</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    {clusterStats && clusterStats.length > 0
+                      ? clusterStats.map(c => `${c.tier.split(' ')[0]}: ${c.count}`).join(' | ')
+                      : 'Tier Stratified Initial Seeding'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>🧬</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '700' }}>AI Concept 3</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#fbcfe8' }}>Genetic Algorithm Engine</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>2,500 Generations Converged</div>
+                </div>
+              </div>
+            </div>
+
             <div className="teams-grid">
               {groups.map((group, groupIndex) => {
                 const avgScore = group.length > 0
@@ -1569,7 +1605,22 @@ function App() {
                               {getInitials(student.full_name)}
                             </div>
                             <div>
-                              <p className="member-name">{cleanStudentName(student.full_name)}</p>
+                              <p className="member-name">
+                                {cleanStudentName(student.full_name)}
+                                {student.clusterTier && (
+                                  <span style={{
+                                    fontSize: '10px',
+                                    marginLeft: '8px',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    background: student.clusterTier.includes('Advanced') ? 'rgba(16, 185, 129, 0.18)' : student.clusterTier.includes('Proficient') ? 'rgba(99, 102, 241, 0.18)' : 'rgba(245, 158, 11, 0.18)',
+                                    color: student.clusterTier.includes('Advanced') ? '#6ee7b7' : student.clusterTier.includes('Proficient') ? '#a5b4fc' : '#fcd34d',
+                                    fontWeight: '600'
+                                  }}>
+                                    {student.clusterTier.split(' ')[0]}
+                                  </span>
+                                )}
+                              </p>
                               <p className="member-degree">{student.degree_program}</p>
                             </div>
                           </div>

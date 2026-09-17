@@ -6,7 +6,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?logo=supabase)](https://supabase.com/)
 [![License](https://img.shields.io/badge/License-MIT-green)](#license)
 
-An automated, intelligent student team optimization platform designed for **General Sir John Kotelawala Defence University (KDU)**. The system leverages **Fuzzy Logic Skill Profiling** and a **Genetic Algorithm Balancing Engine** to construct fair, balanced, and cross-disciplinary student teams.
+An automated, intelligent student team optimization platform designed for **General Sir John Kotelawala Defence University (KDU)**. The system leverages a 3-stage hybrid AI pipeline—**Fuzzy Logic Skill Profiling**, **K-Means Cohort Stratification**, and a **Genetic Algorithm Balancing Engine**—to construct fair, balanced, and cross-disciplinary student teams.
 
 ---
 
@@ -26,8 +26,11 @@ An automated, intelligent student team optimization platform designed for **Gene
   - **1st Year (1st Sem)**: Uses A/L Z-Score (0.0 - 3.5).
   - **2nd, 3rd & 4th Year**: Uses University GPA (0.0 - 4.0).
 - 🛡️ **Duplicate Student ID Protection**: Automatic real-time validation and batch-import duplicate skipping to maintain clean data integrity.
-- 🧠 **AI Genetic Algorithm Engine**: Optimizes skill distribution across teams while maximizing inter-disciplinary diversity.
-- 📄 **PDF Report Generation**: Instant export of formatted team allocation reports for academic administration.
+- 🧠 **3-Stage Hybrid AI Architecture**:
+  - **Concept 1: Fuzzy Logic Profiler**: Standardizes disparate academic metrics (A/L Z-Scores and GPAs) into continuous competency scores.
+  - **Concept 2: K-Means Clustering**: Partitions cohorts into $k=3$ stratified performance tiers (Developing, Proficient, Advanced) to eliminate homogeneous team seeding.
+  - **Concept 3: Genetic Algorithm Optimizer**: Performs combinatorial stochastic search with multi-objective fitness evaluation to balance skills while maximizing inter-disciplinary diversity.
+- 📄 **Dual Report Generation**: Instant export of formatted team allocation reports for academic administration in both **PDF** and **Excel (.xlsx)** formats.
 
 ---
 
