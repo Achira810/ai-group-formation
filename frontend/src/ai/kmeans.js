@@ -101,13 +101,14 @@ export function runKMeans(students, k = 3, maxIterations = 50) {
   const sortedCentroids = paired.map(p => Math.round(p.centroid * 10) / 10);
   const sortedClusters = paired.map(p => p.members);
 
-  // Tag students with cluster metadata
-  sortedClusters.forEach((clusterList, clusterIdx) => {
-    clusterList.forEach(student => {
-      student.clusterId = clusterIdx;
-      student.clusterTier = tierLabels[clusterIdx];
-    });
-  });
+  // Tag students with cluster metadata immutably
+  const taggedClusters = sortedClusters.map((clusterList, clusterIdx) =>
+    clusterList.map(student => ({
+      ...student,
+      clusterId: clusterIdx,
+      clusterTier: tierLabels[clusterIdx]
+    }))
+  );
 
   const clusterStats = paired.map((p, idx) => ({
     tier: tierLabels[idx],
@@ -117,7 +118,7 @@ export function runKMeans(students, k = 3, maxIterations = 50) {
 
   return {
     centroids: sortedCentroids,
-    clusters: sortedClusters,
+    clusters: taggedClusters,
     clusterStats
   };
 }

@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-const defaultUrl = 'https://udtajzpgrgltkdvcvttm.supabase.co';
-const defaultKey = 'sb_publishable_zB1s-1CQvxmfXz_YwK0yCg_nWlgY2mg';
-
 const envUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
@@ -12,11 +9,11 @@ const isInvalidKey = !envKey || envKey.includes('your-production-supabase-anon-k
 
 if (isInvalidUrl || isInvalidKey) {
   console.warn(
-    '[Supabase Configuration] Environment variables contain placeholder or empty values. Falling back to default working Supabase project configuration.'
+    '[Supabase Configuration] Missing or invalid Supabase environment variables. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are defined in your frontend/.env file or production host environment variables.'
   );
 }
 
-const supabaseUrl = isInvalidUrl ? defaultUrl : envUrl;
-const supabaseKey = isInvalidKey ? defaultKey : envKey;
+const supabaseUrl = isInvalidUrl ? 'https://placeholder-project.supabase.co' : envUrl;
+const supabaseKey = isInvalidKey ? 'placeholder-supabase-anon-key' : envKey;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
