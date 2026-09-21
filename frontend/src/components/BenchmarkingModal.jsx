@@ -919,7 +919,7 @@ export const BenchmarkingModal = ({ isOpen, onClose, students = [], numTeams = 4
           color: '#64748b'
         }}>
           <div>
-            <span>KDU Faculty of Computing & Engineering EAI Final Project</span>
+            <span>Faculty of Computing - KDU</span>
           </div>
           <button
             type="button"
