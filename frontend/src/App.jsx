@@ -8,12 +8,13 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import DOMPurify from 'dompurify';
 import { runKMeans, stratifyByKMeans } from './ai/kmeans';
-import { calculateTeamSynergy, BELBIN_ROLES } from './ai/xai';
+import { calculateTeamSynergy, BELBIN_ROLES, getActiveRoles, getRoleIcon } from './ai/xai';
 import { evaluateFitness } from './ai/benchmarking';
 import { RadarChart } from './components/RadarChart';
 import { BenchmarkingModal } from './components/BenchmarkingModal';
 import { ConstraintsModal } from './components/ConstraintsModal';
 import { BelbinRoleModal } from './components/BelbinRoleModal';
+import { BatchGradingModal } from './components/BatchGradingModal';
 import { AiCopilotWidget } from './components/AiCopilotWidget';
 import { CurriculumModuleSelector } from './components/CurriculumModuleSelector';
 import { getCurriculumModules, getStudentModuleScore, getSemestersForYear } from './data/curriculumData';
@@ -193,6 +194,7 @@ function App() {
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
   const [isBelbinRoleOpen, setIsBelbinRoleOpen] = useState(false);
   const [isBelbinOpen, setIsBelbinOpen] = useState(false);
+  const [isBatchGradingOpen, setIsBatchGradingOpen] = useState(false);
   const [gaWeights, setGaWeights] = useState({
     alpha: 1.0, // Academic Equity Weight
     beta: 1.0,  // Cross-Discipline Diversity Weight
@@ -236,14 +238,20 @@ function App() {
         msg: 'Connecting to Supabase and populating KDU sample cohort...'
       });
 
-      // Clear previous records
-      await supabase.from('group_members').delete().not('id', 'is', null);
-      await supabase.from('groups').delete().not('id', 'is', null);
-      await supabase.from('team_constraints').delete().not('id', 'is', null);
-      await supabase.from('students').delete().not('id', 'is', null);
+      // Clear previous records safely
+      try {
+        await supabase.from('team_constraints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (clearErr) {
+        console.warn('Note while clearing assignments:', clearErr);
+      }
 
-      // Insert students
-      const { data: insertedStudents, error: sErr } = await supabase.from('students').insert(sampleStudents).select();
+      // Upsert sample students (handles existing or new records without duplicate key errors)
+      const { data: insertedStudents, error: sErr } = await supabase
+        .from('students')
+        .upsert(sampleStudents, { onConflict: 'student_id' })
+        .select();
       if (sErr) throw sErr;
 
       // Insert sample constraints
@@ -254,11 +262,16 @@ function App() {
 
       let initialConstraints = [];
       if (s1 && s2 && s3 && s4) {
-        const { data: constData } = await supabase.from('team_constraints').insert([
-          { student_a_id: s1.id, student_b_id: s2.id, constraint_type: 'AFFINITY', notes: 'Joint Robotics/Hardware Prototype' },
-          { student_a_id: s3.id, student_b_id: s4.id, constraint_type: 'CONFLICT', notes: 'Conflicting work schedules' }
-        ]).select();
-        if (constData) initialConstraints = constData;
+        try {
+          await supabase.from('team_constraints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          const { data: constData } = await supabase.from('team_constraints').insert([
+            { student_a_id: s1.id, student_b_id: s2.id, constraint_type: 'AFFINITY', notes: 'Joint Robotics/Hardware Prototype' },
+            { student_a_id: s3.id, student_b_id: s4.id, constraint_type: 'CONFLICT', notes: 'Conflicting work schedules' }
+          ]).select();
+          if (constData) initialConstraints = constData;
+        } catch (cErr) {
+          console.warn('Could not insert sample constraints:', cErr);
+        }
       }
 
       const freshStudents = await fetchStudents();
@@ -554,7 +567,7 @@ function App() {
       soft_skill_score: s.soft_skill_score
     }));
 
-    const { error } = await supabase.from('students').insert(payload);
+    const { error } = await supabase.from('students').upsert(payload, { onConflict: 'student_id' });
 
     if (!error) {
       const skippedCount = previewStudents.length - validStudents.length;
@@ -648,8 +661,12 @@ function App() {
   const saveGroupsToDatabase = async (bestGroups) => {
     try {
       // 1. Clear previous group assignments
-      await supabase.from('group_members').delete().not('id', 'is', null);
-      await supabase.from('groups').delete().not('id', 'is', null);
+      try {
+        await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (cErr) {
+        console.warn("Notice on clearing groups:", cErr);
+      }
 
       if (!bestGroups || bestGroups.length === 0) return;
 
@@ -974,11 +991,17 @@ function App() {
       soft_skill_score: 75 
     };
 
-    const { data: insertedData, error } = await supabase.from('students').insert([newStudent]).select();
+    const { data: insertedData, error } = await supabase.from('students').upsert([newStudent], { onConflict: 'student_id' }).select();
     const createdStudent = (insertedData && insertedData[0]) ? insertedData[0] : newStudent;
 
     if (!error) {
-      setStudents((prev) => [...prev, createdStudent]);
+      setStudents((prev) => {
+        const exists = prev.some(s => s.student_id === createdStudent.student_id);
+        if (exists) {
+          return prev.map(s => s.student_id === createdStudent.student_id ? createdStudent : s);
+        }
+        return [...prev, createdStudent];
+      });
       setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' })); 
     } else {
       console.warn('Database note on adding student:', error);
@@ -1405,7 +1428,7 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '24px' }}>🎭</span>
               <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.25)', color: '#fde68a' }}>
-                4 Roles Active
+                {getActiveRoles().length} Roles Active
               </span>
             </div>
             <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#fef3c7', margin: '0 0 4px 0' }}>
@@ -1416,6 +1439,36 @@ function App() {
             </p>
             <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#fbbf24', fontWeight: '600' }}>
               <span>Open Profiler & Survey</span>
+              <span>→</span>
+            </div>
+          </div>
+
+          {/* CARD 4: POST-FORMATION BATCH GRADING & ICF */}
+          <div 
+            onClick={() => setIsBatchGradingOpen(true)}
+            className="hub-card"
+            style={{
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(13, 148, 136, 0.35) 100%)',
+              border: '1px solid rgba(45, 212, 191, 0.35)',
+              borderRadius: '16px',
+              padding: '16px 18px',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '24px' }}>⚖️</span>
+              <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(45, 212, 191, 0.25)', color: '#5eead4' }}>
+                Kaufman ICF
+              </span>
+            </div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#ccfbf1', margin: '0 0 4px 0' }}>
+              Batch Grading & Anti-Freerider
+            </h4>
+            <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+              Post-formation assessment: peer ratings (T, S, C, Q), anti-freerider penalties, and collusion detection.
+            </p>
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#2dd4bf', fontWeight: '600' }}>
+              <span>Open Grading Console</span>
               <span>→</span>
             </div>
           </div>
@@ -1995,9 +2048,7 @@ function App() {
                     const score = student.technical_score || 0;
                     const fillColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
                     const role = student.belbin_role || 'Technical Implementer';
-                    const roleIcon = role.includes('Coordinator') || role.includes('Lead') ? '👑' :
-                                     role.includes('Analyst') ? '📊' :
-                                     role.includes('QA') || role.includes('Documentation') ? '📝' : '💻';
+                    const roleIcon = getRoleIcon(role);
                     
                     return (
                       <tr key={student.id}>
@@ -2328,6 +2379,27 @@ function App() {
                 <span>🎯</span> Optimized Team Allocations ({groups.length} Teams)
               </h2>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsBatchGradingOpen(true)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)',
+                    border: '1px solid rgba(45, 212, 191, 0.4)',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>⚖️</span>
+                  <span>Batch Grading & ICF</span>
+                </button>
                 <button className="btn-action-pdf" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }} onClick={downloadGroupsExcel}>
                   <span>📗</span> Export Excel (.xlsx)
                 </button>
@@ -2567,9 +2639,7 @@ function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {group.map((student) => {
                                 const role = student.belbin_role || 'Technical Implementer';
-                                const roleIcon = role.includes('Coordinator') || role.includes('Lead') ? '👑' :
-                                                 role.includes('Analyst') ? '📊' :
-                                                 role.includes('QA') || role.includes('Documentation') ? '📝' : '💻';
+                                const roleIcon = getRoleIcon(role);
 
                                 return (
                                   <div
@@ -2763,6 +2833,13 @@ function App() {
           onClose={() => setIsBelbinOpen(false)}
           students={students}
           onStudentUpdated={handleStudentRoleUpdated}
+        />
+
+        <BatchGradingModal
+          isOpen={isBatchGradingOpen}
+          onClose={() => setIsBatchGradingOpen(false)}
+          groups={groups}
+          students={students}
         />
 
         <AiCopilotWidget

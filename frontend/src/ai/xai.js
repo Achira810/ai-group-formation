@@ -4,12 +4,88 @@
  * and extracts 5-axis radar chart coordinates.
  */
 
-export const BELBIN_ROLES = [
+export const DEFAULT_BELBIN_ROLES = [
   { id: 'coordinator', name: 'Team Coordinator / Lead', icon: '👑', color: '#f59e0b', desc: 'Clarifies goals, delegates tasks, promotes decision making' },
   { id: 'implementer', name: 'Technical Implementer', icon: '💻', color: '#3b82f6', desc: 'Turns ideas into practical actions, core coding & architecture' },
   { id: 'analyst', name: 'Research & Data Analyst', icon: '📊', color: '#10b981', desc: 'Analyzes problem domains, validates logic, ensures accuracy' },
   { id: 'finisher', name: 'QA & Documentation Lead', icon: '📝', color: '#ec4899', desc: 'Maintains standards, polishes reports, ensures deadline adherence' }
 ];
+
+export const BELBIN_ROLES = DEFAULT_BELBIN_ROLES;
+
+export const SUITABLE_ROLE_ICONS = [
+  { icon: '👑', label: 'Lead / Coordinator' },
+  { icon: '💻', label: 'Developer / Implementer' },
+  { icon: '📊', label: 'Data / Research Analyst' },
+  { icon: '📝', label: 'QA / Documentation' },
+  { icon: '🎨', label: 'UI / UX Designer' },
+  { icon: '☁️', label: 'DevOps & Cloud' },
+  { icon: '🤖', label: 'AI & Machine Learning' },
+  { icon: '🛡️', label: 'Cybersecurity & Audit' },
+  { icon: '📱', label: 'Mobile Developer' },
+  { icon: '⚙️', label: 'Systems Architect' },
+  { icon: '🎯', label: 'Scrum / Product Lead' },
+  { icon: '🧪', label: 'Test Engineer' },
+  { icon: '💡', label: 'Innovation Anchor' },
+  { icon: '🔬', label: 'Hardware & Embedded IoT' },
+  { icon: '🌐', label: 'Full-Stack Web Specialist' },
+  { icon: '📦', label: 'Backend & Database Admin' },
+  { icon: '🔧', label: 'DevOps & Tooling' },
+  { icon: '🧩', label: 'System Integration Specialist' }
+];
+
+export const getActiveRoles = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('kdu_belbin_roles');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not read custom roles from localStorage:", err);
+  }
+  return DEFAULT_BELBIN_ROLES;
+};
+
+export const saveActiveRoles = (roles) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('kdu_belbin_roles', JSON.stringify(roles));
+    }
+  } catch (err) {
+    console.warn("Could not save custom roles to localStorage:", err);
+  }
+};
+
+export const getRoleIcon = (roleName) => {
+  if (!roleName) return '💻';
+  const roles = getActiveRoles();
+  const matched = roles.find(r => r.name.toLowerCase() === roleName.toLowerCase() || r.id === roleName.toLowerCase());
+  if (matched?.icon) return matched.icon;
+
+  const low = roleName.toLowerCase();
+  if (low.includes('coordinator') || low.includes('lead') || low.includes('manager')) return '👑';
+  if (low.includes('design') || low.includes('ui') || low.includes('ux') || low.includes('frontend')) return '🎨';
+  if (low.includes('cloud') || low.includes('devops') || low.includes('infra')) return '☁️';
+  if (low.includes('ai') || low.includes('ml') || low.includes('machine') || low.includes('neural')) return '🤖';
+  if (low.includes('security') || low.includes('cyber')) return '🛡️';
+  if (low.includes('mobile') || low.includes('android') || low.includes('ios')) return '📱';
+  if (low.includes('analyst') || low.includes('data') || low.includes('research')) return '📊';
+  if (low.includes('qa') || low.includes('test') || low.includes('doc') || low.includes('quality')) return '📝';
+  if (low.includes('hardware') || low.includes('iot') || low.includes('embedded')) return '🔬';
+  if (low.includes('product') || low.includes('scrum') || low.includes('agile')) return '🎯';
+  return '💻';
+};
+
+export const getRoleColor = (roleName) => {
+  if (!roleName) return '#3b82f6';
+  const roles = getActiveRoles();
+  const matched = roles.find(r => r.name.toLowerCase() === roleName.toLowerCase() || r.id === roleName.toLowerCase());
+  if (matched?.color) return matched.color;
+  return '#6366f1';
+};
 
 /**
  * Calculates a comprehensive team synergy score (0 - 100%) and breakdown
