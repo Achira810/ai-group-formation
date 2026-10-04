@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './services/supabaseClient';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -15,6 +15,11 @@ import { BenchmarkingModal } from './components/BenchmarkingModal';
 import { ConstraintsModal } from './components/ConstraintsModal';
 import { BelbinRoleModal } from './components/BelbinRoleModal';
 import { AiCopilotWidget } from './components/AiCopilotWidget';
+import { CurriculumModuleSelector } from './components/CurriculumModuleSelector';
+import { getCurriculumModules, getStudentModuleScore, getSemestersForYear } from './data/curriculumData';
+import { downloadKDUMarksheetTemplate, parseKDUMultiModuleSheet, parseFlatModuleSheet } from './services/kduMarksheetService';
+import { cleanStudentName, sanitizeSpreadsheetCell, getInitials, getAvatarBg } from './utils/studentUtils';
+import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -71,54 +76,6 @@ const campusData = {
   ]
 };
 
-const sanitizeSpreadsheetCell = (val) => {
-  if (val === null || val === undefined) return '';
-  const str = String(val).trim();
-  // Prevent formula injection (CSV/Excel DDE injection attacks)
-  if (/^[=+@\-\t\r]/.test(str)) {
-    return `'${str}`;
-  }
-  return str;
-};
-
-const cleanStudentName = (name) => {
-  if (!name) return 'Student';
-  let cleaned = DOMPurify.sanitize(String(name).trim())
-    .replace(/^undefined\s*/gi, '')
-    .replace(/\s*\(Hons\)[^,]*/gi, '')
-    .replace(/\s*-\s*(BSc|BTech|Civil|Software|Data Science|Computer Science|IT|ICT|Logistics|Nursing|Management|Spatial|Quantity|Law|Criminology|Strategic)[^,]*/gi, '')
-    .replace(/,\s*Social Sciences & Humanities.*/gi, '')
-    .replace(/\s*(Civil|Engineering|Computing|Logistics|Humanities|Management|Science|Data|Software|Architecture|Nursing|Pharmacy)\s*$/gi, '')
-    .trim();
-
-  return cleaned || 'Student';
-};
-
-// Helper for avatar initials and colors
-const getInitials = (name) => {
-  const cleaned = cleanStudentName(name);
-  if (!cleaned) return 'ST';
-  const parts = cleaned.split(' ');
-  if (parts.length >= 2 && parts[0] && parts[1] && parts[0][0] && parts[1][0]) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return cleaned.slice(0, 2).toUpperCase();
-};
-
-const getAvatarBg = (id) => {
-  const colors = [
-    'linear-gradient(135deg, #6366f1, #4f46e5)',
-    'linear-gradient(135deg, #06b6d4, #0891b2)',
-    'linear-gradient(135deg, #10b981, #059669)',
-    'linear-gradient(135deg, #f59e0b, #d97706)',
-    'linear-gradient(135deg, #ec4899, #db2777)',
-    'linear-gradient(135deg, #8b5cf6, #7c3aed)'
-  ];
-  let charCodeSum = 0;
-  for (let i = 0; i < id.length; i++) charCodeSum += id.charCodeAt(i);
-  return colors[charCodeSum % colors.length];
-};
-
 function App() {
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]); 
@@ -133,19 +90,108 @@ function App() {
   const [formData, setFormData] = useState({
     studentId: '', 
     fullName: '', 
-    academicYear: '1st Year',
-    faculty: 'Faculty of Computing', 
-    program: 'BSc (Hons) Computer Science', 
+    faculty: '', 
+    program: '', 
+    academicYear: '',
+    semester: '',
+    moduleCode: '',
     scoreValue: ''
   });
 
+  const formAvailableSemesters = useMemo(() => {
+    return formData.academicYear ? getSemestersForYear(formData.academicYear) : [];
+  }, [formData.academicYear]);
+
+  const isFirstYearFirstSem = useMemo(() => {
+    const yr = (formData.academicYear || '').toLowerCase().trim();
+    const sem = (formData.semester || '').toLowerCase().trim();
+    const isYear1 = yr === '1st year' || yr === 'year 1' || yr.startsWith('1st') || yr.startsWith('year 1');
+    const isSem1 = sem === 'semester i' || sem === 'semester 1' || sem === 'sem 1' || sem === 'sem i';
+    return isYear1 && isSem1;
+  }, [formData.academicYear, formData.semester]);
+
+  const formAvailableModules = useMemo(() => {
+    if (isFirstYearFirstSem) return [];
+    return getCurriculumModules(formData.faculty, formData.program, formData.academicYear, formData.semester);
+  }, [formData.faculty, formData.program, formData.academicYear, formData.semester, isFirstYearFirstSem]);
+
+  const matchedExistingStudent = useMemo(() => {
+    if (!formData.studentId.trim()) return null;
+    const lower = formData.studentId.trim().toLowerCase();
+    return students.find(s => s.student_id?.toLowerCase().trim() === lower) || null;
+  }, [formData.studentId, students]);
+
   const [allocationMode, setAllocationMode] = useState('groupSize'); 
   const [allocationValue, setAllocationValue] = useState(''); 
+
+  // KDU Academic Curriculum & Evaluation Module Selector States (Starts completely unfilled)
+  const [selectedFaculty, setSelectedFaculty] = useState('');
+  const [selectedDegree, setSelectedDegree] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedModuleCode, setSelectedModuleCode] = useState('');
+  const [filterByDegree, setFilterByDegree] = useState(false);
+
+  const availableModules = useMemo(() => {
+    return getCurriculumModules(selectedFaculty, selectedDegree, selectedYear, selectedSemester);
+  }, [selectedFaculty, selectedDegree, selectedYear, selectedSemester]);
+
+  const activeModule = useMemo(() => {
+    if (!selectedModuleCode) return null;
+    const found = availableModules.find(m => m.code === selectedModuleCode);
+    return found || null;
+  }, [availableModules, selectedModuleCode]);
+
+  useEffect(() => {
+    if (selectedModuleCode && availableModules.length > 0 && !availableModules.some(m => m.code === selectedModuleCode)) {
+      setSelectedModuleCode('');
+    }
+  }, [availableModules, selectedModuleCode]);
+
+  const effectiveStudents = useMemo(() => {
+    let list = students;
+    if (filterByDegree && selectedDegree) {
+      const targetDeg = selectedDegree.toLowerCase();
+      const filtered = list.filter(s => {
+        const deg = (s.degree_program || '').toLowerCase();
+        return deg.includes(targetDeg) || targetDeg.includes(deg.replace(/^[0-9a-z\s]+-\s*/i, ''));
+      });
+      if (filtered.length > 0) list = filtered;
+    }
+    return list.map(st => ({
+      ...st,
+      technical_score: activeModule ? getStudentModuleScore(st, activeModule.code, st.technical_score) : (st.technical_score || 75)
+    }));
+  }, [students, filterByDegree, selectedDegree, activeModule]);
+
+  const moduleStats = useMemo(() => {
+    if (!activeModule || effectiveStudents.length === 0) {
+      return { avg: 0, max: 0, min: 0, count: 0 };
+    }
+    const scores = effectiveStudents.map(s => s.technical_score || 0);
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const avg = (sum / scores.length).toFixed(1);
+    const max = Math.max(...scores);
+    const min = Math.min(...scores);
+    return { avg, max, min, count: effectiveStudents.length };
+  }, [effectiveStudents, activeModule]);
+
+  const handleDownloadKDUTemplate = () => {
+    downloadKDUMarksheetTemplate(
+      selectedFaculty,
+      selectedDegree,
+      selectedYear,
+      selectedSemester,
+      availableModules,
+      students
+    );
+  };
 
   // Stage 3 AI & Database Extension States
   const [constraints, setConstraints] = useState([]);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
+  const [isBelbinRoleOpen, setIsBelbinRoleOpen] = useState(false);
   const [isBelbinOpen, setIsBelbinOpen] = useState(false);
   const [gaWeights, setGaWeights] = useState({
     alpha: 1.0, // Academic Equity Weight
@@ -269,37 +315,30 @@ function App() {
   };
 
   const downloadSampleExcel = () => {
-    const sampleData = [
-      {
-        "Student ID": "D/BIT/24/0001",
-        "Full Name": "Achira Hathsidu",
-        "Academic Year": "1st Year",
-        "Faculty": "Faculty of Computing",
-        "Degree Program": "BSc (Hons) Computer Science",
-        "Score": 1.854
-      },
-      {
-        "Student ID": "D/BIT/24/0002",
-        "Full Name": "Kasun Perera",
-        "Academic Year": "2nd Year",
-        "Faculty": "Faculty of Computing",
-        "Degree Program": "BSc (Hons) Software Engineering",
-        "Score": 3.75
-      },
-      {
-        "Student ID": "D/ENG/24/0010",
-        "Full Name": "Nimali Silva",
-        "Academic Year": "1st Year",
-        "Faculty": "Faculty of Engineering",
-        "Degree Program": "Civil Engineering",
-        "Score": 1.92
-      }
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(sampleData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Students");
-    XLSX.writeFile(wb, "KDU_Student_Upload_Template.xlsx");
+    try {
+      const link = document.createElement('a');
+      link.href = '/Marks_Format.xlsx';
+      link.setAttribute('download', 'Marks Format.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      // Fallback
+      const sampleData = [
+        {
+          "Student ID": "D/BIT/24/0001",
+          "Full Name": "Achira Hathsidu",
+          "Academic Year": "1st Year",
+          "Faculty": "Faculty of Computing",
+          "Degree Program": "BSc (Hons) Computer Science",
+          "Score": 1.854
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Students");
+      XLSX.writeFile(wb, "Marks Format.xlsx");
+    }
   };
 
   const parsePdfFile = async (file) => {
@@ -418,44 +457,69 @@ function App() {
             const wb = XLSX.read(bstr, { type: 'binary' });
             const wsName = wb.SheetNames[0];
             const ws = wb.Sheets[wsName];
-            const rawData = XLSX.utils.sheet_to_json(ws);
-
-            if (!rawData || rawData.length === 0) {
-              alert("No data found in the uploaded file.");
-              return;
-            }
 
             const existingIdsSet = new Set(students.map(s => s.student_id?.toLowerCase().trim()));
             const seenInFileSet = new Set();
+            let parsed = [];
 
-            const parsed = rawData.map((row, index) => {
-              const rawId = row["Student ID"] || row["StudentId"] || row["ID"] || `STU-${index + 1}`;
-              const studentId = DOMPurify.sanitize(String(rawId).trim()).slice(0, 30);
-              const lowerId = studentId.toLowerCase();
-              const rawFullName = row["Full Name"] || row["Name"] || row["FullName"] || "Unknown Student";
-              const fullName = DOMPurify.sanitize(String(rawFullName).trim()).slice(0, 100);
-              const academicYear = row["Academic Year"] || row["Year"] || "1st Year";
-              const faculty = row["Faculty"] || "Faculty of Computing";
-              const degreeProgram = row["Degree Program"] || row["Program"] || row["Degree"] || "BSc (Hons) Computer Science";
-              const score = row["Score"] || row["GPA"] || row["Z-Score"] || row["ZScore"] || 0;
+            // 1. Try official KDU Multi-row format first (Array of Arrays)
+            const aoaData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            const parsedKDU = parseKDUMultiModuleSheet(aoaData, availableModules);
 
-              const isDuplicate = existingIdsSet.has(lowerId) || seenInFileSet.has(lowerId);
-              seenInFileSet.add(lowerId);
+            if (parsedKDU && parsedKDU.length > 0) {
+              parsed = parsedKDU.map((st) => {
+                const lowerId = st.student_id.toLowerCase();
+                const isDuplicate = existingIdsSet.has(lowerId) || seenInFileSet.has(lowerId);
+                seenInFileSet.add(lowerId);
+                const score = activeModule ? getStudentModuleScore(st, activeModule.code, st.technical_score) : (st.technical_score || 75);
+                const degreeProgram = (selectedYear && selectedDegree) ? `${selectedYear} - ${selectedDegree}` : 'BSc (Hons) Computer Science';
+                return {
+                  student_id: st.student_id,
+                  full_name: st.full_name,
+                  degree_program: degreeProgram,
+                  technical_score: score,
+                  soft_skill_score: 75,
+                  rawScore: score,
+                  academicYear: selectedYear || '1st Year',
+                  module_scores: st.module_scores,
+                  isDuplicate
+                };
+              });
+            } else {
+              // 2. Fallback to standard tabular / object parsing
+              const rawData = XLSX.utils.sheet_to_json(ws);
+              if (!rawData || rawData.length === 0) {
+                alert("No data found in the uploaded file.");
+                return;
+              }
 
-              const calculatedTechScore = calculateFuzzyScore(academicYear, score);
-              const fullDegree = `${academicYear} - ${degreeProgram}`;
+              const flatParsed = parseFlatModuleSheet(rawData, availableModules);
+              parsed = flatParsed.map((row) => {
+                const lowerId = row.student_id.toLowerCase();
+                const isDuplicate = existingIdsSet.has(lowerId) || seenInFileSet.has(lowerId);
+                seenInFileSet.add(lowerId);
+                const score = activeModule ? getStudentModuleScore(row, activeModule.code, row.technical_score) : (row.technical_score || 75);
+                const degreeProgram = row.degree_program || selectedDegree || 'BSc (Hons) Computer Science';
+                const academicYear = row.academicYear || selectedYear || '1st Year';
 
-              return {
-                student_id: studentId,
-                full_name: String(fullName).trim(),
-                degree_program: fullDegree,
-                technical_score: calculatedTechScore,
-                soft_skill_score: 75,
-                rawScore: score,
-                academicYear: academicYear,
-                isDuplicate: isDuplicate
-              };
-            });
+                return {
+                  student_id: row.student_id,
+                  full_name: row.full_name,
+                  degree_program: `${academicYear} - ${degreeProgram}`,
+                  technical_score: score,
+                  soft_skill_score: 75,
+                  rawScore: score,
+                  academicYear: academicYear,
+                  module_scores: row.module_scores,
+                  isDuplicate
+                };
+              });
+            }
+
+            if (parsed.length === 0) {
+              alert("No valid student records could be parsed. Please check the file format or download the KDU template.");
+              return;
+            }
 
             setPreviewStudents(parsed);
             setShowPreviewModal(true);
@@ -495,7 +559,7 @@ function App() {
     if (!error) {
       const skippedCount = previewStudents.length - validStudents.length;
       alert(`Successfully imported ${payload.length} new students!${skippedCount > 0 ? ` (${skippedCount} duplicate IDs skipped)` : ''}`);
-      fetchStudents();
+      setStudents(prev => [...prev, ...validStudents]);
       setShowPreviewModal(false);
       setPreviewStudents([]);
     } else {
@@ -509,11 +573,16 @@ function App() {
   }, []);
 
   const initApp = async () => {
-    const loadedStudents = await fetchStudents();
+    // Start with clean empty state on every browser refresh or page visit
+    setStudents([]);
+    setGroups([]);
+    setClusterStats([]);
+    setSelectedFaculty('');
+    setSelectedDegree('');
+    setSelectedYear('');
+    setSelectedSemester('');
+    setSelectedModuleCode('');
     await fetchConstraints();
-    if (loadedStudents && loadedStudents.length > 0) {
-      await fetchSavedGroups(loadedStudents);
-    }
   };
 
   const fetchConstraints = async () => {
@@ -766,71 +835,179 @@ function App() {
       return;
     }
 
-    const rawScore = parseFloat(formData.scoreValue);
-    if (isNaN(rawScore)) {
-      alert("Please enter a numeric score value.");
+    if (!formData.academicYear) {
+      alert("Please select an Academic Year.");
       return;
     }
 
-    if (formData.academicYear === '1st Year') {
-      if (rawScore < -2.0 || rawScore > 3.5) {
-        alert("For 1st Year, please enter a valid Z-Score between -2.0000 and 3.5000.");
+    if (!formData.faculty) {
+      alert("Please select a Faculty.");
+      return;
+    }
+
+    if (!formData.program) {
+      alert("Please select a Degree Program.");
+      return;
+    }
+
+    let calculatedTechScore = 75;
+    let moduleScores = {};
+
+    if (isFirstYearFirstSem) {
+      const rawScore = parseFloat(formData.scoreValue);
+      if (isNaN(rawScore) || rawScore < -2.0 || rawScore > 3.5) {
+        alert("For 1st Year 1st Semester students, only A/L Z-Score can be used. Please enter a valid Z-Score between -2.0000 and 3.5000 (e.g. 1.854).");
         return;
       }
-    } else {
-      if (rawScore < 0.0 || rawScore > 4.0) {
-        alert("For 2nd, 3rd, and 4th Year, please enter a valid GPA between 0.00 and 4.00.");
+      calculatedTechScore = calculateFuzzyScore('1st Year', rawScore);
+      moduleScores = { "AL_ZSCORE": rawScore };
+    } else if (formData.moduleCode) {
+      const mark = parseFloat(formData.scoreValue);
+      if (isNaN(mark) || mark < 0 || mark > 100) {
+        alert("Please enter a valid numeric mark between 0 and 100 for the selected module.");
         return;
+      }
+      calculatedTechScore = Math.min(100, Math.max(0, Math.round(mark)));
+      moduleScores[formData.moduleCode] = calculatedTechScore;
+    } else {
+      const rawScore = parseFloat(formData.scoreValue);
+      if (isNaN(rawScore)) {
+        alert("Please enter a numeric score value.");
+        return;
+      }
+
+      if (formData.academicYear === '1st Year') {
+        if (rawScore < -2.0 || rawScore > 3.5) {
+          alert("For 1st Year, please enter a valid Z-Score between -2.0000 and 3.5000.");
+          return;
+        }
+        calculatedTechScore = calculateFuzzyScore('1st Year', rawScore);
+      } else {
+        if (rawScore < 0.0 || rawScore > 4.0) {
+          alert("For 2nd, 3rd, and 4th Year, please enter a valid GPA between 0.00 and 4.00.");
+          return;
+        }
+        calculatedTechScore = calculateFuzzyScore(formData.academicYear, rawScore);
       }
     }
 
-    const isDuplicate = students.some(
+    const existingStudent = students.find(
       (s) => s.student_id?.toLowerCase().trim() === trimmedId.toLowerCase()
     );
 
-    if (isDuplicate) {
-      alert(`Student ID "${trimmedId}" is already registered. Duplicate Student IDs are not allowed!`);
+    if (existingStudent) {
+      if (!formData.moduleCode) {
+        alert(`Student ID "${trimmedId}" (${existingStudent.full_name}) is already registered!\n\nTo add an additional module score for this student, please select a Semester and Module.`);
+        return;
+      }
+
+      // Prevent adding the same module twice for this student ID
+      if (existingStudent.module_scores && existingStudent.module_scores[formData.moduleCode] !== undefined) {
+        alert(`⚠️ Module [${formData.moduleCode}] has already been added for Student ID "${trimmedId}" (${existingStudent.full_name}) with mark: ${existingStudent.module_scores[formData.moduleCode]}%.\n\nYou cannot add duplicate marks for the same module!`);
+        return;
+      }
+
+      // Merge new module score into student's existing record
+      const updatedModuleScores = {
+        ...(existingStudent.module_scores || {}),
+        [formData.moduleCode]: calculatedTechScore
+      };
+
+      const numericScores = Object.values(updatedModuleScores).map(Number).filter(n => !isNaN(n));
+      const updatedTechScore = numericScores.length > 0
+        ? Math.round(numericScores.reduce((a, b) => a + b, 0) / numericScores.length)
+        : calculatedTechScore;
+
+      // Update in Supabase if student exists in remote database
+      if (existingStudent.id) {
+        try {
+          await supabase
+            .from('students')
+            .update({
+              module_scores: updatedModuleScores,
+              technical_score: updatedTechScore
+            })
+            .eq('id', existingStudent.id);
+        } catch (dbErr) {
+          console.warn('Supabase update note for existing student:', dbErr);
+        }
+      }
+
+      // Update local state
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.student_id?.toLowerCase().trim() === trimmedId.toLowerCase()
+            ? {
+                ...s,
+                module_scores: updatedModuleScores,
+                technical_score: updatedTechScore
+              }
+            : s
+        )
+      );
+
+      setDeltaNotification({
+        type: 'success',
+        msg: `🎉 Module [${formData.moduleCode}] (${calculatedTechScore}%) added to ${trimmedId} (${existingStudent.full_name})! Total modules: ${Object.keys(updatedModuleScores).length}`
+      });
+
+      // Clear module code and score value so user can easily add another module for same student
+      setFormData((prev) => ({
+        ...prev,
+        moduleCode: '',
+        scoreValue: ''
+      }));
+
       return;
     }
 
-    const calculatedTechScore = calculateFuzzyScore(formData.academicYear, rawScore);
     const degreeWithYear = `${formData.academicYear} - ${formData.program}`;
     
-    const { error } = await supabase.from('students').insert([
-      {
-        student_id: trimmedId,
-        full_name: trimmedName,
-        degree_program: degreeWithYear, 
-        technical_score: calculatedTechScore,
-        soft_skill_score: 75 
-      }
-    ]);
+    const newStudent = {
+      student_id: trimmedId,
+      full_name: trimmedName,
+      degree_program: degreeWithYear, 
+      academicYear: formData.academicYear,
+      semester: formData.semester || '',
+      module_scores: moduleScores,
+      technical_score: calculatedTechScore,
+      soft_skill_score: 75 
+    };
+
+    const { data: insertedData, error } = await supabase.from('students').insert([newStudent]).select();
+    const createdStudent = (insertedData && insertedData[0]) ? insertedData[0] : newStudent;
 
     if (!error) {
-      fetchStudents(); 
-      setFormData({...formData, studentId: '', fullName: '', scoreValue: ''}); 
+      setStudents((prev) => [...prev, createdStudent]);
+      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' })); 
     } else {
-      console.error('Error adding student:', error);
-      alert(`Error adding student: ${error.message}`);
+      console.warn('Database note on adding student:', error);
+      // Still allow adding to local session
+      setStudents((prev) => [...prev, newStudent]);
+      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' })); 
     }
   };
 
   const handleDeleteStudent = async (studentDbId) => {
     try {
+      await supabase.from('team_constraints').delete().or(`student_a_id.eq.${studentDbId},student_b_id.eq.${studentDbId}`);
+      await supabase.from('team_health_logs').delete().eq('student_id', studentDbId);
       await supabase.from('group_members').delete().eq('student_id', studentDbId);
       const { error } = await supabase
         .from('students')
         .delete()
         .eq('id', studentDbId);
 
-      if (!error) {
-        await fetchStudents();
-        setGroups(prev => prev.map(grp => grp.filter(s => s.id !== studentDbId)).filter(grp => grp.length > 0));
-      } else {
-        alert(`Error removing student: ${error.message}`);
+      // Always update local state immediately so user is never blocked
+      setStudents((prev) => prev.filter((s) => s.id !== studentDbId));
+      setGroups((prev) => prev.map((g) => g.filter((s) => s.id !== studentDbId)).filter((g) => g.length > 0));
+
+      if (error) {
+        console.warn('Note on remote student deletion:', error);
       }
     } catch (err) {
-      alert(`Error removing student: ${err.message}`);
+      console.error('Error deleting student:', err);
+      setStudents((prev) => prev.filter((s) => s.id !== studentDbId));
     }
   };
 
@@ -841,35 +1018,54 @@ function App() {
     }
 
     const confirmed = window.confirm(
-      `This will permanently delete all ${students.length} registered students and formed groups from Supabase. Continue?`
+      `This will clear all ${students.length} registered students and formed groups. Continue?`
     );
     if (!confirmed) return;
 
     try {
-      await supabase.from('group_members').delete().not('id', 'is', null);
-      await supabase.from('groups').delete().not('id', 'is', null);
+      // 1. Delete dependent constraints & group associations first
+      await supabase.from('team_constraints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('team_health_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      // 2. Delete students
       const { error } = await supabase
         .from('students')
         .delete()
-        .not('id', 'is', null);
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
-      if (error) {
-        console.error('Error clearing students:', error);
-        alert(`Error clearing students: ${error.message}`);
-        return;
-      }
-
+      // Always clear local dashboard state so user is never blocked
       setStudents([]);
       setGroups([]);
       setClusterStats([]);
+
+      if (error) {
+        console.warn('Database note when clearing students:', error);
+        setDeltaNotification({
+          type: 'info',
+          msg: 'Dashboard reset! Note: Run database/fix_delete_permissions.sql in Supabase to enable cloud cascade delete.'
+        });
+      } else {
+        setDeltaNotification({
+          type: 'success',
+          msg: 'All student records and formed groups successfully cleared!'
+        });
+      }
     } catch (err) {
-      console.error('Error clearing database:', err);
-      alert(`Error clearing database: ${err.message}`);
+      console.warn('Clearing error caught:', err);
+      setStudents([]);
+      setGroups([]);
+      setClusterStats([]);
+      setDeltaNotification({
+        type: 'info',
+        msg: 'Dashboard cleared.'
+      });
     }
   };
 
   const runAIEngine = () => {
-    if (students.length === 0) {
+    if (effectiveStudents.length === 0) {
       alert("No students available to form groups.");
       return;
     }
@@ -886,23 +1082,23 @@ function App() {
 
       let numTeams = 0;
       if (allocationMode === 'groupSize') {
-        numTeams = Math.ceil(students.length / targetVal);
+        numTeams = Math.ceil(effectiveStudents.length / targetVal);
       } else {
         numTeams = targetVal;
       }
 
-      if (numTeams <= 0 || numTeams > students.length) {
+      if (numTeams <= 0 || numTeams > effectiveStudents.length) {
         alert("Invalid allocation settings.");
         setIsOptimizing(false);
         return;
       }
 
       // AI Concept 2: K-Means Clustering Tier Stratification (k=3)
-      const kResult = runKMeans(students, 3);
+      const kResult = runKMeans(effectiveStudents, 3);
       setClusterStats(kResult.clusterStats);
 
       // Seed initial population using K-Means stratified sampling across performance tiers
-      let currentGroups = stratifyByKMeans(students, numTeams, 3);
+      let currentGroups = stratifyByKMeans(effectiveStudents, numTeams, 3);
 
       let bestGroups = currentGroups.map(g => [...g]);
       let bestFitness = evaluateFitness(bestGroups, gaWeights, constraints);
@@ -933,9 +1129,10 @@ function App() {
         }
       }
 
-      const cohortMean = students.reduce((tot, s) => tot + (s.technical_score || 0), 0) / students.length;
+      const cohortMean = effectiveStudents.reduce((tot, s) => tot + (s.technical_score || 0), 0) / effectiveStudents.length;
       bestGroups.forEach(g => {
         g.synergy = calculateTeamSynergy(g, cohortMean);
+        g.evaluatedModule = activeModule;
       });
 
       setGroups(bestGroups); 
@@ -951,20 +1148,31 @@ function App() {
     doc.setFontSize(18);
     doc.setTextColor(30, 41, 59);
     doc.text('KDU AI Group Formation Results', pageWidth / 2, 18, { align: 'center' });
+    const facLabel = selectedFaculty || 'Faculty of Computing';
+    const degLabel = selectedDegree || 'All Degrees';
+    const cohortLabel = (selectedYear && selectedSemester) ? `${selectedYear} - ${selectedSemester}` : 'General Cohort';
+    const modLabel = activeModule ? `[${activeModule.code}] ${activeModule.name} (${activeModule.credits})` : 'General Competency';
+    const modCode = activeModule ? activeModule.code : 'EVAL';
+    const markHeader = activeModule ? `${activeModule.code} Mark` : 'Technical Mark';
+
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+    doc.text(`Faculty: ${facLabel} • Degree: ${degLabel}`, 14, 26);
+    doc.text(`Cohort: ${cohortLabel} • Subject: ${modLabel}`, 14, 32);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
 
     const tableRows = groups.flatMap((group, groupIndex) => group.map((student, studentIndex) => [
       studentIndex === 0 ? `Team ${String(groupIndex + 1).padStart(2, '0')}` : '',
       student.student_id,
-      student.full_name,
-      student.degree_program
+      cleanStudentName(student.full_name),
+      student.degree_program,
+      `${student.technical_score}%`,
+      student.belbin_role ? student.belbin_role.split(' / ')[0] : 'Member'
     ]));
 
     autoTable(doc, {
-      startY: 35,
-      head: [['Team', 'Student ID', 'Name', 'Degree Program']],
+      startY: 44,
+      head: [['Team', 'Student ID', 'Name', 'Degree Program', markHeader, 'Belbin Role']],
       body: tableRows,
       theme: 'grid',
       margin: { left: 14, right: 14 },
@@ -984,32 +1192,27 @@ function App() {
       },
       alternateRowStyles: {
         fillColor: [248, 250, 252]
-      },
-      columnStyles: {
-        0: { cellWidth: 26, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 38 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 'auto' }
-      },
-      didDrawPage: (data) => {
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.text(`Page ${data.pageNumber}`, pageWidth - 14, 290, { align: 'right' });
       }
     });
 
-    doc.save('kdu-ai-group-formation-results.pdf');
+    doc.save(`KDU_AI_Teams_${modCode}_${selectedYear || 'Year'}_${selectedSemester || 'Sem'}.pdf`);
   };
 
   const downloadGroupsExcel = () => {
     if (groups.length === 0) return;
+
+    const modLabel = activeModule ? `${activeModule.code} - ${activeModule.name}` : 'General Competency';
+    const modCode = activeModule ? activeModule.code : 'EVAL';
 
     const exportRows = groups.flatMap((group, groupIndex) => 
       group.map((student) => ({
         "Team": `Team ${String(groupIndex + 1).padStart(2, '0')}`,
         "Student ID": sanitizeSpreadsheetCell(student.student_id),
         "Full Name": sanitizeSpreadsheetCell(cleanStudentName(student.full_name)),
-        "Degree Program": sanitizeSpreadsheetCell(student.degree_program)
+        "Degree Program": sanitizeSpreadsheetCell(student.degree_program),
+        "Evaluation Module": modLabel,
+        "Subject Score (%)": student.technical_score,
+        "Belbin Role": student.belbin_role || 'Technical Implementer'
       }))
     );
 
@@ -1018,624 +1221,30 @@ function App() {
       { wch: 12 },
       { wch: 18 },
       { wch: 30 },
-      { wch: 45 }
+      { wch: 42 },
+      { wch: 38 },
+      { wch: 18 },
+      { wch: 24 }
     ];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "AI Teams Allocation");
-    XLSX.writeFile(wb, "KDU_AI_Group_Formation_Results.xlsx");
+    XLSX.writeFile(wb, `KDU_AI_Teams_${modCode}_${selectedYear || 'Year'}_${selectedSemester || 'Sem'}.xlsx`);
   };
 
-  const filteredStudents = students.filter(s => 
+  const filteredStudents = effectiveStudents.filter(s => 
     s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.degree_program?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const avgTechScore = students.length > 0 
-    ? (students.reduce((acc, curr) => acc + (curr.technical_score || 0), 0) / students.length).toFixed(1)
+  const avgTechScore = effectiveStudents.length > 0 
+    ? (effectiveStudents.reduce((acc, curr) => acc + (curr.technical_score || 0), 0) / effectiveStudents.length).toFixed(1)
     : 0;
 
   return (
     <div className="modern-root">
-      <style>{`
-        * {
-          box-sizing: border-box;
-        }
-
-        body {
-          margin: 0;
-          padding: 0;
-          background-color: #0f172a;
-          color: #f8fafc;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-
-        .modern-root {
-          min-height: 100vh;
-          background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-          padding: 24px 16px;
-        }
-
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.85);
-          backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          padding: 20px;
-        }
-
-        .modal-content {
-          background: #1e293b;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 20px;
-          max-width: 900px;
-          width: 100%;
-          max-height: 85vh;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          overflow: hidden;
-        }
-
-        /* Hero Banner */
-        .hero-card {
-          position: relative;
-          border-radius: 20px;
-          overflow: hidden;
-          background: #1e293b;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          margin-bottom: 28px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-img-wrapper {
-          position: relative;
-          width: 100%;
-          height: 240px;
-          overflow: hidden;
-        }
-
-        .hero-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          filter: brightness(0.75) contrast(1.1);
-        }
-
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.65) 50%, rgba(15, 23, 42, 0.4) 100%);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 32px 40px;
-        }
-
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 12px;
-          border-radius: 9999px;
-          background: rgba(99, 102, 241, 0.2);
-          border: 1px solid rgba(129, 140, 248, 0.3);
-          color: #818cf8;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          width: fit-content;
-          margin-bottom: 12px;
-        }
-
-        .hero-title {
-          font-size: 32px;
-          font-weight: 800;
-          margin: 0 0 8px 0;
-          background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .hero-subtitle {
-          font-size: 15px;
-          color: #94a3b8;
-          margin: 0;
-          max-width: 600px;
-          line-height: 1.5;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-          gap: 20px;
-          margin-bottom: 28px;
-        }
-
-        .stat-card {
-          background: rgba(30, 41, 59, 0.7);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 20px;
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(99, 102, 241, 0.4);
-        }
-
-        .stat-icon {
-          width: 52px;
-          height: 52px;
-          border-radius: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          flex-shrink: 0;
-        }
-
-        .stat-val {
-          font-size: 26px;
-          font-weight: 700;
-          color: #ffffff;
-          margin: 0;
-          line-height: 1.2;
-        }
-
-        .stat-label {
-          font-size: 13px;
-          color: #94a3b8;
-          margin: 2px 0 0 0;
-        }
-
-        /* Panel Glass */
-        .glass-panel {
-          background: rgba(30, 41, 59, 0.65);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          padding: 28px;
-          margin-bottom: 28px;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
-
-        .panel-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-
-        .panel-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #f8fafc;
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        /* Entry Form Grid */
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(12, 1fr);
-          gap: 14px;
-        }
-
-        .col-2 { grid-column: span 2; }
-        .col-3 { grid-column: span 3; }
-        .col-4 { grid-column: span 4; }
-        .col-6 { grid-column: span 6; }
-        .col-12 { grid-column: span 12; }
-
-        .input-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .input-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: #cbd5e1;
-          letter-spacing: 0.3px;
-        }
-
-        .modern-input, .modern-select {
-          width: 100%;
-          padding: 12px 14px;
-          background: #0f172a;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
-          color: #ffffff;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .modern-input:focus, .modern-select:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-        }
-
-        .modern-select option {
-          background: #0f172a;
-          color: #ffffff;
-        }
-
-        /* Buttons */
-        .btn-primary {
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-          color: #ffffff;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-
-        .btn-primary:hover {
-          background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-          box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45);
-          transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-          background: rgba(255, 255, 255, 0.06);
-          color: #cbd5e1;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          padding: 10px 18px;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.12);
-          color: #ffffff;
-        }
-
-        .btn-danger {
-          background: rgba(239, 68, 68, 0.15);
-          color: #f87171;
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-danger:hover {
-          background: rgba(239, 68, 68, 0.3);
-          color: #ffffff;
-        }
-
-        .btn-action-pdf {
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-          color: #ffffff;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-          transition: all 0.2s ease;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .btn-action-pdf:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(220, 38, 38, 0.45);
-        }
-
-        /* Allocation Selector */
-        .alloc-container {
-          background: rgba(15, 23, 42, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
-          padding: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 20px;
-          flex-wrap: wrap;
-          margin-bottom: 24px;
-        }
-
-        .alloc-options {
-          display: flex;
-          background: #0f172a;
-          padding: 4px;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .alloc-tab {
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #94a3b8;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .alloc-tab.active {
-          background: #6366f1;
-          color: #ffffff;
-          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-run-ai {
-          width: 100%;
-          padding: 16px;
-          font-size: 16px;
-          font-weight: 700;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          color: #ffffff;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .btn-run-ai:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 14px 24px -5px rgba(16, 185, 129, 0.55);
-        }
-
-        /* Modern Table */
-        .table-responsive {
-          width: 100%;
-          overflow-x: auto;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .modern-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 14px;
-          background: #0f172a;
-        }
-
-        .modern-table th {
-          background: rgba(30, 41, 59, 0.9);
-          padding: 14px 16px;
-          color: #cbd5e1;
-          font-weight: 600;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .modern-table td {
-          padding: 14px 16px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          color: #e2e8f0;
-        }
-
-        .modern-table tr:hover td {
-          background: rgba(255, 255, 255, 0.02);
-        }
-
-        /* Student Avatar Cell */
-        .student-cell {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .avatar-circle {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #ffffff;
-          font-weight: 700;
-          font-size: 13px;
-          flex-shrink: 0;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Score Pill */
-        .score-bar-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .score-bar-track {
-          flex: 1;
-          height: 6px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 9999px;
-          overflow: hidden;
-          min-width: 60px;
-        }
-
-        .score-bar-fill {
-          height: 100%;
-          border-radius: 9999px;
-        }
-
-        /* Teams Display Grid */
-        .teams-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 20px;
-          margin-top: 24px;
-        }
-
-        .team-card {
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          transition: border-color 0.2s ease;
-        }
-
-        .team-card:hover {
-          border-color: rgba(99, 102, 241, 0.4);
-        }
-
-        .team-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-bottom: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .team-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #818cf8;
-          margin: 0;
-        }
-
-        .team-score-badge {
-          background: rgba(16, 185, 129, 0.15);
-          color: #34d399;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          padding: 4px 10px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .team-member-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px;
-          background: rgba(30, 41, 59, 0.5);
-          border-radius: 10px;
-          gap: 12px;
-        }
-
-        .member-info {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .member-name {
-          font-size: 14px;
-          font-weight: 600;
-          color: #f8fafc;
-          margin: 0;
-        }
-
-        .member-degree {
-          font-size: 11px;
-          color: #94a3b8;
-          margin: 2px 0 0 0;
-        }
-
-        .hub-card {
-          transition: all 0.25s ease;
-        }
-        .hub-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-          border-color: rgba(255, 255, 255, 0.35) !important;
-        }
-
-        .preset-btn {
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 11px;
-          font-weight: 600;
-          background: rgba(30, 41, 59, 0.7);
-          color: #cbd5e1;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .preset-btn:hover {
-          background: rgba(99, 102, 241, 0.25);
-          color: #ffffff;
-          border-color: rgba(129, 140, 248, 0.4);
-        }
-
-        .card-tab-btn {
-          padding: 5px 12px;
-          border-radius: 6px;
-          font-size: 11px;
-          font-weight: 600;
-          background: transparent;
-          color: #94a3b8;
-          border: none;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        .card-tab-btn.active {
-          background: #4f46e5;
-          color: #ffffff;
-          box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
-        }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 900px) {
-          .col-2, .col-3, .col-4, .col-6 { grid-column: span 12; }
-          .hero-img-wrapper { height: 200px; }
-          .hero-title { font-size: 24px; }
-          .hero-overlay { padding: 20px; }
-          .alloc-container { flex-direction: column; align-items: stretch; }
-          .teams-grid { grid-template-columns: 1fr; }
-        }
-      `}</style>
+      
 
       <div className="container">
         
@@ -2091,18 +1700,38 @@ function App() {
           </div>
 
           <form onSubmit={handleAddStudent} className="form-grid">
-            <div className="input-group col-2">
-              <label className="input-label">Student ID</label>
+            {/* Row 1: Student ID, Full Name, Faculty */}
+            <div className="input-group col-3">
+              <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Student ID</span>
+                {matchedExistingStudent && (
+                  <span style={{ fontSize: '11px', color: '#34d399', fontWeight: '700' }}>
+                    ✓ Existing ({Object.keys(matchedExistingStudent.module_scores || {}).length} mods)
+                  </span>
+                )}
+              </label>
               <input
                 className="modern-input"
                 value={formData.studentId}
                 placeholder="e.g. D/BIT/24/0001"
                 required
-                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const match = students.find(s => s.student_id?.toLowerCase().trim() === val.trim().toLowerCase());
+                  setFormData(prev => ({
+                    ...prev,
+                    studentId: val,
+                    fullName: match ? (match.full_name || prev.fullName) : prev.fullName
+                  }));
+                }}
+                style={{
+                  borderColor: matchedExistingStudent ? '#10b981' : undefined,
+                  boxShadow: matchedExistingStudent ? '0 0 0 2px rgba(16, 185, 129, 0.25)' : undefined
+                }}
               />
             </div>
 
-            <div className="input-group col-3">
+            <div className="input-group col-4">
               <label className="input-label">Full Name</label>
               <input
                 className="modern-input"
@@ -2113,88 +1742,203 @@ function App() {
               />
             </div>
 
-            <div className="input-group col-2">
-              <label className="input-label">Academic Year</label>
-              <select
-                className="modern-select"
-                value={formData.academicYear}
-                onChange={(e) => setFormData({ ...formData, academicYear: e.target.value, scoreValue: '' })}
-              >
-                <option value="1st Year">1st Year</option>
-                <option value="2nd Year">2nd Year</option>
-                <option value="3rd Year">3rd Year</option>
-                <option value="4th Year">4th Year</option>
-              </select>
-            </div>
-
-            <div className="input-group col-3">
+            <div className="input-group col-5">
               <label className="input-label">Faculty</label>
               <select
                 className="modern-select"
                 value={formData.faculty}
                 onChange={(e) => {
                   const selectedFaculty = e.target.value;
+                  const degs = campusData[selectedFaculty] || [];
+                  const defaultDeg = degs[0] || '';
+                  const mods = getCurriculumModules(selectedFaculty, defaultDeg, formData.academicYear, formData.semester);
                   setFormData({
                     ...formData,
                     faculty: selectedFaculty,
-                    program: campusData[selectedFaculty][0]
+                    program: defaultDeg,
+                    moduleCode: mods.length > 0 ? mods[0].code : ''
                   });
                 }}
               >
+                <option value="">-- Select Faculty --</option>
                 {Object.keys(campusData).map((faculty) => (
                   <option key={faculty} value={faculty}>{faculty}</option>
                 ))}
               </select>
             </div>
 
-            <div className="input-group col-4">
+            {/* Row 2: Degree Program, Academic Year, Semester */}
+            <div className="input-group col-5">
               <label className="input-label">Degree Program</label>
               <select
                 className="modern-select"
                 value={formData.program}
-                onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                disabled={!formData.faculty}
+                onChange={(e) => {
+                  const deg = e.target.value;
+                  const mods = getCurriculumModules(formData.faculty, deg, formData.academicYear, formData.semester);
+                  setFormData({
+                    ...formData,
+                    program: deg,
+                    moduleCode: mods.length > 0 ? mods[0].code : ''
+                  });
+                }}
               >
-                {campusData[formData.faculty].map((degree) => (
+                <option value="">-- Select Degree Program --</option>
+                {(campusData[formData.faculty] || []).map((degree) => (
                   <option key={degree} value={degree}>{degree}</option>
                 ))}
               </select>
             </div>
 
-            {formData.academicYear === '1st Year' ? (
-              <div className="input-group col-2">
-                <label className="input-label">A/L Z-Score</label>
-                <input
-                  className="modern-input"
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  max="3.5"
-                  value={formData.scoreValue}
-                  placeholder="e.g. 1.854"
-                  required
-                  onChange={(e) => setFormData({ ...formData, scoreValue: e.target.value })}
-                />
+            <div className="input-group col-4">
+              <label className="input-label">Academic Year</label>
+              <select
+                className="modern-select"
+                value={formData.academicYear}
+                onChange={(e) => {
+                  const yr = e.target.value;
+                  const sems = yr ? getSemestersForYear(yr) : [];
+                  const firstSem = sems[0] || '';
+                  const isY1S1 = (yr === '1st Year' || yr === 'Year 1') && firstSem === 'Semester I';
+                  const mods = isY1S1 ? [] : getCurriculumModules(formData.faculty, formData.program, yr, firstSem);
+                  setFormData({
+                    ...formData,
+                    academicYear: yr,
+                    semester: firstSem,
+                    moduleCode: isY1S1 ? '' : (mods.length > 0 ? mods[0].code : ''),
+                    scoreValue: ''
+                  });
+                }}
+              >
+                <option value="">-- Select Academic Year --</option>
+                <option value="1st Year">1st Year (Year 1)</option>
+                <option value="2nd Year">2nd Year (Year 2)</option>
+                <option value="3rd Year">3rd Year (Year 3)</option>
+                <option value="4th Year">4th Year (Year 4)</option>
+              </select>
+            </div>
+
+            <div className="input-group col-3">
+              <label className="input-label">Semester</label>
+              <select
+                className="modern-select"
+                value={formData.semester}
+                disabled={!formData.academicYear}
+                onChange={(e) => {
+                  const sem = e.target.value;
+                  const isY1S1 = (formData.academicYear === '1st Year' || formData.academicYear === 'Year 1') && sem === 'Semester I';
+                  const mods = isY1S1 ? [] : getCurriculumModules(formData.faculty, formData.program, formData.academicYear, sem);
+                  setFormData({
+                    ...formData,
+                    semester: sem,
+                    moduleCode: isY1S1 ? '' : (mods.length > 0 ? mods[0].code : ''),
+                    scoreValue: ''
+                  });
+                }}
+              >
+                <option value="">-- Select Semester --</option>
+                {formAvailableSemesters.map((sem) => (
+                  <option key={sem} value={sem}>{sem}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Row 3: Evaluation Module / Metric, Score / Mark, Submit Button */}
+            {isFirstYearFirstSem ? (
+              <div className="input-group col-5">
+                <label className="input-label">Evaluation Metric</label>
+                <div style={{
+                  padding: '11px 14px',
+                  background: 'rgba(99, 102, 241, 0.12)',
+                  border: '1px solid rgba(99, 102, 241, 0.35)',
+                  borderRadius: '10px',
+                  color: '#c7d2fe',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '600'
+                }}>
+                  <span>🎯</span> A/L Z-Score Entry (Direct School Intake)
+                </div>
               </div>
             ) : (
-              <div className="input-group col-2">
-                <label className="input-label">GPA (0.0 - 4.0)</label>
-                <input
-                  className="modern-input"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="4.0"
-                  value={formData.scoreValue}
-                  placeholder="e.g. 3.75"
-                  required
-                  onChange={(e) => setFormData({ ...formData, scoreValue: e.target.value })}
-                />
+              <div className="input-group col-5">
+                <label className="input-label">
+                  Evaluation Module {formAvailableModules.length > 0 ? `(${formAvailableModules.length} Modules in ${formData.semester})` : ''}
+                </label>
+                <select
+                  className="modern-select"
+                  value={formData.moduleCode}
+                  disabled={!formData.semester || formAvailableModules.length === 0}
+                  onChange={(e) => setFormData({ ...formData, moduleCode: e.target.value })}
+                  style={{
+                    borderColor: formData.moduleCode ? '#6366f1' : 'rgba(255,255,255,0.15)'
+                  }}
+                >
+                  <option value="">
+                    {formAvailableModules.length > 0 ? '-- Select Module --' : '(Select Year & Semester first)'}
+                  </option>
+                  {formAvailableModules.map((mod) => {
+                    const isAlreadyAdded = Boolean(matchedExistingStudent?.module_scores && matchedExistingStudent.module_scores[mod.code] !== undefined);
+                    const existingScore = isAlreadyAdded ? matchedExistingStudent.module_scores[mod.code] : null;
+                    return (
+                      <option
+                        key={mod.code}
+                        value={mod.code}
+                        disabled={isAlreadyAdded}
+                        style={isAlreadyAdded ? { color: '#ef4444', backgroundColor: '#1e293b' } : {}}
+                      >
+                        {isAlreadyAdded
+                          ? `⛔ [${mod.code}] ${mod.name} (Already Added: ${existingScore}%)`
+                          : `[${mod.code}] ${mod.name} — ${mod.credits} (${mod.category})`}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
             )}
 
+            <div className="input-group col-4">
+              <label className="input-label">
+                {isFirstYearFirstSem
+                  ? 'A/L Z-Score (-2.0000 to 3.5000)'
+                  : formData.moduleCode
+                    ? `[${formData.moduleCode}] Mark (0 - 100)`
+                    : 'GPA (0.00 to 4.00)'}
+              </label>
+              <input
+                className="modern-input"
+                type="number"
+                step={isFirstYearFirstSem ? "0.0001" : formData.moduleCode ? "1" : "0.01"}
+                min={isFirstYearFirstSem ? "-2.0" : formData.moduleCode ? "0" : "0.0"}
+                max={isFirstYearFirstSem ? "3.5" : formData.moduleCode ? "100" : "4.0"}
+                value={formData.scoreValue}
+                placeholder={isFirstYearFirstSem ? "e.g. 1.854" : formData.moduleCode ? "e.g. 85" : "e.g. 3.75"}
+                required
+                onChange={(e) => setFormData({ ...formData, scoreValue: e.target.value })}
+              />
+            </div>
+
             <div className="col-3" style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button type="submit" className="btn-primary" style={{ width: '100%' }}>
-                <span>✨</span> Add Student Profile
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: matchedExistingStudent
+                    ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                    : undefined
+                }}
+              >
+                <span>{matchedExistingStudent ? '➕' : '✨'}</span>
+                <span>{matchedExistingStudent ? `Add Module to ${matchedExistingStudent.student_id}` : 'Add Student Profile'}</span>
               </button>
             </div>
           </form>
@@ -2228,7 +1972,14 @@ function App() {
                   <th>ID</th>
                   <th>Degree Program</th>
                   <th>Belbin Role</th>
-                  <th>AI Tech Score</th>
+                  <th>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span>Subject Competency</span>
+                      <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'normal', fontFamily: 'monospace' }}>
+                        {activeModule ? `[${activeModule.code}] ${activeModule.name.length > 20 ? activeModule.name.slice(0, 18) + '...' : activeModule.name}` : '(Base Tech Score)'}
+                      </span>
+                    </div>
+                  </th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -2258,7 +2009,32 @@ function App() {
                             <span style={{ fontWeight: '600' }}>{cleanStudentName(student.full_name)}</span>
                           </div>
                         </td>
-                        <td style={{ fontFamily: 'monospace', color: '#818cf8' }}>{student.student_id}</td>
+                        <td style={{ fontFamily: 'monospace' }}>
+                          <div style={{ fontWeight: '700', color: '#818cf8' }}>{student.student_id}</div>
+                          {student.module_scores && Object.keys(student.module_scores).length > 0 && (
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', maxWidth: '240px' }}>
+                              {Object.entries(student.module_scores).map(([mCode, mScore]) => {
+                                const isCurrentActive = activeModule?.code === mCode;
+                                return (
+                                  <span
+                                    key={mCode}
+                                    title={`Module: ${mCode} | Mark: ${mScore}%`}
+                                    style={{
+                                      fontSize: '10px',
+                                      padding: '1px 5px',
+                                      borderRadius: '4px',
+                                      background: isCurrentActive ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.08)',
+                                      color: isCurrentActive ? '#c7d2fe' : '#94a3b8',
+                                      border: isCurrentActive ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.12)'
+                                    }}
+                                  >
+                                    {mCode}: <strong>{mScore}%</strong>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </td>
                         <td>{student.degree_program}</td>
                         <td>
                           <button
@@ -2312,6 +2088,26 @@ function App() {
               <span>🧠</span> AI Team Formation Configurator
             </h2>
           </div>
+
+          {/* CURRICULUM, DEGREE, YEAR, SEMESTER & TARGET MODULE SELECTOR */}
+          <CurriculumModuleSelector
+            selectedFaculty={selectedFaculty}
+            setSelectedFaculty={setSelectedFaculty}
+            selectedDegree={selectedDegree}
+            setSelectedDegree={setSelectedDegree}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            selectedSemester={selectedSemester}
+            setSelectedSemester={setSelectedSemester}
+            selectedModuleCode={selectedModuleCode}
+            setSelectedModuleCode={setSelectedModuleCode}
+            availableModules={availableModules}
+            activeModule={activeModule}
+            onDownloadTemplate={handleDownloadKDUTemplate}
+            filterByDegree={filterByDegree}
+            setFilterByDegree={setFilterByDegree}
+            moduleStats={moduleStats}
+          />
 
           <div className="alloc-container">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -2666,6 +2462,28 @@ function App() {
                               Avg: {avgScore}
                             </div>
                           </div>
+
+                          {activeModule && (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '4px 10px',
+                              background: 'rgba(99, 102, 241, 0.12)',
+                              border: '1px solid rgba(99, 102, 241, 0.28)',
+                              borderRadius: '8px',
+                              fontSize: '11px',
+                              marginTop: '6px',
+                              marginBottom: '8px'
+                            }}>
+                              <span style={{ color: '#c7d2fe', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span>📘</span> {activeModule.code} Avg: <strong style={{ color: '#38bdf8' }}>{avgScore}%</strong>
+                              </span>
+                              <span style={{ color: '#94a3b8', fontSize: '10px' }}>
+                                {activeModule.credits}
+                              </span>
+                            </div>
+                          )}
 
                           <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <span>👥 {group.length} Members</span>
