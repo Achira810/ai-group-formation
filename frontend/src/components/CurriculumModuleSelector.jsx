@@ -1,5 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { KDU_FACULTIES, DEGREE_CURRICULUM, getSemestersForYear } from '../data/curriculumData';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  KDU_FACULTIES,
+  CAMPUS_FACULTY_DEGREES,
+  DEGREE_CURRICULUM,
+  getSemestersForYear,
+  getPrerequisiteRecommendation,
+  getAvailablePriorModules
+} from '../data/curriculumData';
 
 export const CurriculumModuleSelector = ({
   selectedFaculty,
@@ -17,16 +24,20 @@ export const CurriculumModuleSelector = ({
   onDownloadTemplate,
   filterByDegree,
   setFilterByDegree,
-  moduleStats
+  moduleStats,
+  evaluationMode = 'prerequisite',
+  setEvaluationMode,
+  selectedPrerequisiteCode,
+  setSelectedPrerequisiteCode
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('ALL'); // 'ALL' | 'COMPULSORY' | 'ELECTIVE'
 
-  // Degrees available under selected faculty
-  const availableDegrees = selectedFaculty === "Faculty of Computing"
-    ? Object.keys(DEGREE_CURRICULUM)
-    : selectedFaculty
-      ? ["BSc (Hons) Computer Science", "BSc (Hons) Software Engineering", "BSc (Hons) Computer Engineering"]
+  // Degrees available dynamically under any selected faculty
+  const availableDegrees = selectedFaculty && CAMPUS_FACULTY_DEGREES[selectedFaculty]
+    ? CAMPUS_FACULTY_DEGREES[selectedFaculty]
+    : selectedFaculty === "Faculty of Computing"
+      ? Object.keys(DEGREE_CURRICULUM)
       : [];
 
   const availableSemesters = selectedYear ? getSemestersForYear(selectedYear) : [];
@@ -84,6 +95,32 @@ export const CurriculumModuleSelector = ({
   }, [availableModules, searchQuery, filterCategory]);
 
   const isCascadingComplete = Boolean(selectedFaculty && selectedDegree && selectedYear && selectedSemester);
+
+  const isSem1 = useMemo(() => {
+    const sem = (selectedSemester || '').toLowerCase().trim();
+    return sem === 'semester i' || sem === 'semester 1' || sem === 'sem 1' || sem === 'sem i' || sem === '1';
+  }, [selectedSemester]);
+
+  const prerequisiteInfo = useMemo(() => {
+    return activeModule ? getPrerequisiteRecommendation(activeModule.code) : null;
+  }, [activeModule]);
+
+  const availablePriorModules = useMemo(() => {
+    return getAvailablePriorModules(selectedFaculty, selectedDegree, selectedYear, selectedSemester);
+  }, [selectedFaculty, selectedDegree, selectedYear, selectedSemester]);
+
+  // Automatically sync recommended prerequisite code (or AL_ZSCORE for 1st Sem)
+  useEffect(() => {
+    if (setSelectedPrerequisiteCode) {
+      if (isSem1) {
+        setSelectedPrerequisiteCode('AL_ZSCORE');
+      } else if (activeModule && prerequisiteInfo?.code) {
+        setSelectedPrerequisiteCode(prerequisiteInfo.code);
+      } else {
+        setSelectedPrerequisiteCode('');
+      }
+    }
+  }, [activeModule?.code, prerequisiteInfo?.code, isSem1, setSelectedPrerequisiteCode]);
 
   return (
     <div style={{
@@ -474,6 +511,124 @@ export const CurriculumModuleSelector = ({
         )}
       </div>
 
+      {/* SEMESTER-BASED EVALUATION BASIS (DISPLAY ONLY - NO SELECTION CONTROLS) */}
+      {selectedSemester && isSem1 ? (
+        <div style={{
+          marginBottom: '16px',
+          padding: '14px 18px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)',
+          border: '1.5px solid rgba(99, 102, 241, 0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '26px' }}>🎯</span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Evaluation Basis: G.C.E. A/L Z-Score</span>
+                <span style={{ fontSize: '10px', background: 'rgba(99, 102, 241, 0.3)', color: '#c7d2fe', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.5)', fontWeight: '700' }}>
+                  1ST SEMESTER INTAKE
+                </span>
+              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                {activeModule ? (
+                  <>Students have not sat for university exams in <strong>{activeModule.name}</strong> yet. In 1st Semester, the AI engine automatically balances teams based on students' <strong>G.C.E. A/L Z-Score</strong> foundation.</>
+                ) : (
+                  <>1st Semester students have no prior university exam marks. The AI engine automatically uses students' <strong>G.C.E. A/L Z-Score</strong> as the competency metric.</>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '10px',
+            background: 'rgba(99, 102, 241, 0.25)',
+            border: '1.5px solid #818cf8',
+            color: '#e0e7ff',
+            fontSize: '12px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap'
+          }}>
+            <span>🎯</span>
+            <span>A/L Intake Z-Score Benchmark</span>
+          </div>
+        </div>
+      ) : selectedSemester && !isSem1 && activeModule ? (
+        <div style={{
+          marginBottom: '16px',
+          padding: '14px 18px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%)',
+          border: '1.5px solid rgba(16, 185, 129, 0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '26px' }}>🔗</span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Related Prerequisite Subject for [{activeModule.code}]</span>
+                <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.5)', fontWeight: '700' }}>
+                  AUTOMATIC BENCHMARK
+                </span>
+              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                Students haven't taken the final exam for <strong>{activeModule.name}</strong> yet. The AI engine automatically balances teams using their competency in the foundational prerequisite subject:
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '9px 18px',
+            borderRadius: '10px',
+            background: 'rgba(16, 185, 129, 0.18)',
+            border: '1.5px solid #10b981',
+            color: '#a7f3d0',
+            fontSize: '12px',
+            fontWeight: '700'
+          }}>
+            <span>⭐</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: '800' }}>[{prerequisiteInfo?.code || 'PREREQ'}]</span>
+            <span style={{ fontWeight: '700' }}>{prerequisiteInfo?.name || 'Foundational Subject'}</span>
+            {prerequisiteInfo?.reason && (
+              <span style={{ fontSize: '11px', color: '#6ee7b7', fontWeight: '500', marginLeft: '4px', opacity: 0.9 }}>
+                • {prerequisiteInfo.reason}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : selectedSemester && !isSem1 && !activeModule ? (
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px 18px',
+          borderRadius: '12px',
+          background: 'rgba(30, 41, 59, 0.6)',
+          border: '1px dashed rgba(129, 140, 248, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '22px' }}>💡</span>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+            <strong style={{ color: '#c7d2fe' }}>{selectedSemester} Evaluation:</strong> Choose a target subject above. The AI engine will automatically link and display its foundational prerequisite subject from previous semesters.
+          </div>
+        </div>
+      ) : null}
+
       {/* Active Module Live Stats Bar (only when a module is selected) */}
       {activeModule ? (
         <div style={{
@@ -516,7 +671,8 @@ export const CurriculumModuleSelector = ({
           {/* Cohort Stats for this Module */}
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', fontSize: '12px', flexWrap: 'wrap' }}>
             <span style={{ color: '#94a3b8' }}>
-              Subject Avg: <strong style={{ color: '#38bdf8' }}>{moduleStats?.avg || 0}%</strong>
+              {isSem1 ? 'A/L Intake Avg: ' : 'Prereq Avg: '}
+              <strong style={{ color: '#38bdf8' }}>{moduleStats?.avg || 0}%</strong>
             </span>
             <span style={{ color: '#94a3b8' }}>
               Top: <strong style={{ color: '#34d399' }}>{moduleStats?.max || 0}%</strong>

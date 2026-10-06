@@ -13,6 +13,58 @@ export const KDU_FACULTIES = [
   "Faculty of Defence & Strategic Studies"
 ];
 
+export const CAMPUS_FACULTY_DEGREES = {
+  "Faculty of Computing": [
+    "BSc (Hons) Computer Science", 
+    "BSc (Hons) Software Engineering", 
+    "BSc (Hons) Computer Engineering", 
+    "BSc (Hons) Information Technology", 
+    "BSc (Hons) Information Systems",
+    "BSc (Hons) Data Science"
+  ],
+  "Faculty of Engineering": [
+    "Civil Engineering", 
+    "Mechanical Engineering", 
+    "Electrical & Electronic Engineering", 
+    "Electronic & Telecommunication", 
+    "Aeronautical Engineering", 
+    "Biomedical Engineering",
+    "Naval Architecture & Marine Engineering"
+  ],
+  "Faculty of Management, Social Sciences & Humanities": [
+    "BSc Management & Technical Sciences", 
+    "BSc Logistics Management", 
+    "BSc Social Sciences", 
+    "BA in Applied Data Science Communication"
+  ],
+  "Faculty of Allied Health Sciences": [
+    "BSc (Hons) Nursing", 
+    "BSc (Hons) Physiotherapy", 
+    "BSc (Hons) Medical Laboratory Sciences", 
+    "BSc (Hons) Radiography", 
+    "BSc (Hons) Radiotherapy", 
+    "BSc (Hons) Pharmacy"
+  ],
+  "Faculty of Built Environment & Spatial Sciences": [
+    "Bachelor of Architecture", 
+    "BSc (Hons) Quantity Surveying", 
+    "BSc (Hons) Spatial Sciences"
+  ],
+  "Faculty of Law": [
+    "Bachelor of Laws (LLB)"
+  ],
+  "Faculty of Technology": [
+    "BTech (Hons) in ICT", 
+    "BTech (Hons) in Biosystems Technology"
+  ],
+  "Faculty of Criminal Justice": [
+    "BSc in Criminology & Criminal Justice"
+  ],
+  "Faculty of Defence & Strategic Studies": [
+    "BSc in Strategic Studies & International Relations"
+  ]
+};
+
 export const DEGREE_CURRICULUM = {
   "BSc (Hons) Computer Science": {
     "Year 1": {
@@ -342,6 +394,141 @@ export const DEFAULT_FALLBACK_MODULES = [
   { code: "CM11033", name: "Probability and Statistics", credits: "3 GPA", category: "COMPULSORY" }
 ];
 
+// Comprehensive curriculum catalogs for non-computing KDU faculties
+export const FACULTY_FALLBACK_CURRICULUM = {
+  "Faculty of Engineering": {
+    "Year 1": {
+      "Semester I": [
+        { code: "EN1012", name: "Engineering Mathematics I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN1022", name: "Engineering Mechanics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN1032", name: "Computer Programming for Engineers", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "EN1042", name: "Engineering Drawing & CAD", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "EN1002", name: "Workshop Practice & Laboratory", credits: "1 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "EN1052", name: "Engineering Mathematics II", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN1062", name: "Fluid Mechanics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN1072", name: "Thermodynamics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN1082", name: "Materials Science for Engineers", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "EN1092", name: "Basic Electrical Engineering", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "EN2012", name: "Engineering Mathematics III", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2022", name: "Solid Mechanics & Strength of Materials", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2032", name: "Applied Electronics & Circuit Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2042", name: "Collaborative Engineering Design Project", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "EN2052", name: "Numerical Methods for Engineers", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2062", name: "Control Systems Engineering", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2072", name: "Applied Thermodynamics & Heat Transfer", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "EN2082", name: "Engineering Economics & Project Management", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    }
+  },
+
+  "Faculty of Management, Social Sciences & Humanities": {
+    "Year 1": {
+      "Semester I": [
+        { code: "MG1012", name: "Principles of Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG1022", name: "Financial Accounting", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG1032", name: "Business Mathematics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MG1042", name: "Microeconomics", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "MG1052", name: "Macroeconomics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG1062", name: "Business Statistics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG1072", name: "Marketing Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG1082", name: "Organizational Behavior & Group Dynamics", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "MG2012", name: "Cost & Management Accounting", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG2022", name: "Human Resource Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG2032", name: "Operations & Supply Chain Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG2042", name: "Business Project in Management", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "MG2052", name: "Financial Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG2062", name: "Management Information Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MG2072", name: "Business Law & Ethics", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    }
+  },
+
+  "Faculty of Technology": {
+    "Year 1": {
+      "Semester I": [
+        { code: "TC1012", name: "Mathematics for Technology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC1022", name: "Electronics Fundamentals", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC1032", name: "Programming Principles for Technology", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "TC1042", name: "Data Communication & Computer Networks", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC1052", name: "Database Technology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC1062", name: "Web Application Technologies", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "TC2012", name: "Applied Operating Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC2022", name: "Internet of Things (IoT) Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC2032", name: "Technology Group Development Project", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "TC2042", name: "Information Security for Technology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "TC2052", name: "Cloud & Virtualization Technologies", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    }
+  },
+
+  "Faculty of Law": {
+    "Year 1": {
+      "Semester I": [
+        { code: "LW1012", name: "Legal Method & Sri Lankan Legal System", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW1022", name: "Constitutional Law I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW1032", name: "Criminal Law I", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "LW1042", name: "Law of Contract", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW1052", name: "Constitutional Law II", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW1062", name: "Human Rights Law", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "LW2012", name: "Law of Delict / Torts", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW2022", name: "Public International Law", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LW2032", name: "Moot Court & Trial Advocacy Simulation", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    }
+  },
+
+  "Faculty of Allied Health Sciences": {
+    "Year 1": {
+      "Semester I": [
+        { code: "AH1012", name: "Human Anatomy", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "AH1022", name: "Human Physiology I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "AH1032", name: "Biochemistry", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "AH1042", name: "Human Physiology II", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "AH1052", name: "Pathology & Microbiology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "AH1062", name: "Clinical Skills & Patient Care Group Lab", credits: "2 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "AH2012", name: "Pharmacology & Therapeutics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "AH2022", name: "Epidemiology & Community Health", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    }
+  }
+};
+
 export const getSemestersForYear = (year) => {
   if (year === "Year 1" || year === "1st Year") return ["Semester I", "Semester II"];
   if (year === "Year 2" || year === "2nd Year") return ["Semester III", "Semester IV"];
@@ -355,39 +542,190 @@ export const getCurriculumModules = (faculty, degree, year, semester) => {
     return [];
   }
 
-  const normDegree = Object.keys(DEGREE_CURRICULUM).find(
-    (d) => degree?.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(degree?.toLowerCase())
-  );
-
   const normYear = year?.includes("1") ? "Year 1"
     : year?.includes("2") ? "Year 2"
     : year?.includes("3") ? "Year 3"
     : year?.includes("4") ? "Year 4"
     : "Year 1";
 
+  // 1. Direct match by degree name in DEGREE_CURRICULUM
+  const normDegree = Object.keys(DEGREE_CURRICULUM).find(
+    (d) => degree?.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(degree?.toLowerCase())
+  );
+
   if (normDegree && DEGREE_CURRICULUM[normDegree]?.[normYear]?.[semester]) {
     return DEGREE_CURRICULUM[normDegree][normYear][semester];
   }
 
-  // Fallback to first available degree's semester if specific degree isn't in top 3
+  // 2. Direct match by Faculty catalog in FACULTY_FALLBACK_CURRICULUM
+  const normFaculty = Object.keys(FACULTY_FALLBACK_CURRICULUM).find(
+    (f) => faculty?.toLowerCase().includes(f.toLowerCase()) || f.toLowerCase().includes(faculty?.toLowerCase())
+  );
+
+  if (normFaculty && FACULTY_FALLBACK_CURRICULUM[normFaculty]?.[normYear]?.[semester]) {
+    return FACULTY_FALLBACK_CURRICULUM[normFaculty][normYear][semester];
+  }
+
+  // 3. Fallback to computing semester catalog
   const firstMatch = DEGREE_CURRICULUM["BSc (Hons) Computer Science"]?.[normYear]?.[semester];
   if (firstMatch) return firstMatch;
 
   return DEFAULT_FALLBACK_MODULES;
 };
 
-// Deterministically compute or retrieve a realistic student score for a specific module
+// ====================================================================
+// KDU Prerequisite & Benchmark Subject Knowledge Base
+// Maps target project modules to their foundation prerequisite modules
+// ====================================================================
+export const CURRICULUM_PREREQUISITES = {
+  // Year 1 Semester II
+  "CS12012": { code: "CS11012", name: "Fundamentals of Programming", reason: "Web script & coding baseline" },
+  "CS12023": { code: "CS11012", name: "Fundamentals of Programming", reason: "Foundational programming & syntax" },
+  "CS12033": { code: "COE11013", name: "Computer Systems Architecture", reason: "Hardware & architecture baseline" },
+  "CS12041": { code: "CS11012", name: "Fundamentals of Programming", reason: "Media scripting & tools" },
+  "SE12012": { code: "SE11012", name: "Software Development Methodologies", reason: "Software process & engineering basics" },
+  "CM12052": { code: "CM11102", name: "Mathematics for Computing", reason: "Mathematical logic & discrete structures" },
+  "COE12241": { code: "COE11013", name: "Computer Systems Architecture", reason: "Digital logic & electronics" },
+  "COE12992": { code: "COE11013", name: "Computer Systems Architecture", reason: "Hardware design & architecture" },
+  
+  // Year 2 Semester III
+  "CS21012": { code: "COE11013", name: "Computer Systems Architecture", reason: "OS processes & architecture concepts" },
+  "CS21022": { code: "CS12023", name: "Object Oriented Programming", reason: "Data structures require strong OOP" },
+  "CS21032": { code: "CS12023", name: "Object Oriented Programming", reason: "OOP mastery required for Advanced OOP" },
+  "CS21042": { code: "CS12033", name: "Computer Networks", reason: "Networking fundamentals" },
+  "CS21052": { code: "CS12012", name: "Web Development", reason: "Core web development required" },
+  "CS22993": { code: "SE11012", name: "Software Development Methodologies", reason: "Software lifecycle & collaborative dev" },
+  "SE21012": { code: "SE12012", name: "Software Analysis and Modeling", reason: "UML & modeling required for requirements" },
+  "CM21032": { code: "CM11033", name: "Probability and Statistics", reason: "Statistical distribution background" },
+  "CM21102": { code: "CM11102", name: "Mathematics for Computing", reason: "Foundational calculus baseline" },
+
+  // Year 2 Semester IV
+  "CS22012": { code: "CS21022", name: "Data Structures and Algorithms", reason: "Algorithm analysis & advanced data structures" },
+  "CS22023": { code: "CS21022", name: "Data Structures and Algorithms", reason: "AI search heuristics & algorithms" },
+  "SE22013": { code: "SE21012", name: "Requirements Engineering", reason: "Project management & scoping" },
+  "SE22022": { code: "SE12012", name: "Software Analysis and Modeling", reason: "Architectural patterns & modeling" },
+  "COE22032": { code: "COE12241", name: "Fundamentals of Electronics", reason: "Microprocessor & interfacing hardware" },
+  "CM22112": { code: "CM21102", name: "Calculus", reason: "Numerical approximations & calculus" },
+
+  // Year 3 Semester V & VI
+  "CS31022": { code: "CM11033", name: "Probability and Statistics", reason: "Empirical data analysis & research" },
+  "CS31032": { code: "CS21032", name: "Advanced Object Oriented Programming", reason: "Mobile app architecture & OOP" },
+  "CS31042": { code: "CS21042", name: "Advanced Computer Networks", reason: "Network security & protocols" },
+  "CS32023": { code: "CS22023", name: "Artificial Intelligence", reason: "AI reasoning foundation for ML" },
+  "CS32032": { code: "CS31042", name: "Computer and Network Security", reason: "Advanced security defense" },
+  "CS32043": { code: "CS22012", name: "Advanced Data Structures and Algorithms", reason: "Data mining & algorithmic complexity" }
+};
+
+// Retrieve intelligent prerequisite recommendation for a given target module
+export const getPrerequisiteRecommendation = (targetModuleCode) => {
+  if (!targetModuleCode) return null;
+  if (CURRICULUM_PREREQUISITES[targetModuleCode]) {
+    return CURRICULUM_PREREQUISITES[targetModuleCode];
+  }
+
+  // Dynamic heuristics based on subject name or code
+  const upper = targetModuleCode.toUpperCase();
+  if (upper.startsWith("CS11") || upper.startsWith("COE11") || upper.startsWith("CM11") || upper.startsWith("SE11")) {
+    return { code: "AL_ZSCORE", name: "A/L Z-Score & School Aptitude Intake", reason: "Direct school intake foundation" };
+  }
+  if (upper.includes("SE") || upper.includes("PROJECT")) {
+    return { code: "SE11012", name: "Software Development Methodologies", reason: "Software process & teamwork foundation" };
+  }
+  if (upper.includes("CM") || upper.includes("MATH")) {
+    return { code: "CM11102", name: "Mathematics for Computing", reason: "Foundational mathematics" };
+  }
+  return { code: "CS11012", name: "Fundamentals of Programming", reason: "Core computing & logic foundation" };
+};
+
+// Order definition of academic progression
+const SEMESTER_CHRONO_ORDER = [
+  { year: "Year 1", sem: "Semester I", label: "Year 1 • Semester I" },
+  { year: "Year 1", sem: "Semester II", label: "Year 1 • Semester II" },
+  { year: "Year 2", sem: "Semester III", label: "Year 2 • Semester III" },
+  { year: "Year 2", sem: "Semester IV", label: "Year 2 • Semester IV" },
+  { year: "Year 3", sem: "Semester V", label: "Year 3 • Semester V" },
+  { year: "Year 3", sem: "Semester VI", label: "Year 3 • Semester VI" },
+  { year: "Year 4", sem: "Semester VII", label: "Year 4 • Semester VII" }
+];
+
+// Returns all curriculum modules that were taught strictly before currentYear & currentSemester
+export const getAvailablePriorModules = (faculty, degree, currentYear, currentSemester) => {
+  if (!currentYear || !currentSemester) return [];
+
+  const normCurrYear = currentYear.includes("1") ? "Year 1"
+    : currentYear.includes("2") ? "Year 2"
+    : currentYear.includes("3") ? "Year 3"
+    : currentYear.includes("4") ? "Year 4"
+    : "Year 1";
+
+  const currentIndex = SEMESTER_CHRONO_ORDER.findIndex(
+    s => s.year === normCurrYear && s.sem.toLowerCase() === currentSemester.toLowerCase()
+  );
+
+  // If Semester I of Year 1, no prior university modules exist (only A/L Z-Score)
+  if (currentIndex <= 0) {
+    return [
+      { code: "AL_ZSCORE", name: "A/L Z-Score (Direct School Intake)", credits: "Intake Metric", category: "FOUNDATION" }
+    ];
+  }
+
+  const priorModules = [];
+
+  // Always offer A/L Z-Score as a foundational fallback option
+  priorModules.push({
+    code: "AL_ZSCORE",
+    name: "A/L Z-Score (Direct School Intake)",
+    credits: "School Intake",
+    category: "FOUNDATION"
+  });
+
+  // Collect all modules from prior semesters in chronological order
+  for (let i = 0; i < currentIndex; i++) {
+    const priorSem = SEMESTER_CHRONO_ORDER[i];
+    const mods = getCurriculumModules(faculty, degree, priorSem.year, priorSem.sem);
+    mods.forEach(m => {
+      if (!priorModules.some(p => p.code === m.code)) {
+        priorModules.push({
+          ...m,
+          semesterLabel: priorSem.label
+        });
+      }
+    });
+  }
+
+  return priorModules;
+};
+
+// Deterministically compute or retrieve a realistic student score for a specific module or prerequisite
 export const getStudentModuleScore = (student, moduleCode, baseTechScore = 75) => {
   if (!student) return 75;
 
-  // 1. If student already has explicit module_scores stored
+  // 1. If checking A/L Z-Score foundation
+  if (moduleCode === "AL_ZSCORE") {
+    const rawZ = student.module_scores?.["AL_ZSCORE"] 
+      ?? student.module_scores?.["Z_SCORE"] 
+      ?? student.al_zscore 
+      ?? student.z_score;
+    if (rawZ !== undefined && rawZ !== null && rawZ !== '') {
+      const z = parseFloat(rawZ);
+      if (!isNaN(z)) {
+        // Z-scores in Sri Lanka typically range from -1.5 to ~2.8.
+        // Normalize [-2.0, 3.0] into a 35 - 100 scale:
+        const normalized = Math.round(((z + 2.0) / 5.0) * 65 + 35);
+        return Math.min(100, Math.max(30, normalized));
+      }
+    }
+    return student.technical_score || baseTechScore || 75;
+  }
+
+  // 2. If student already has explicit module_scores stored
   if (student.module_scores && student.module_scores[moduleCode] !== undefined) {
     const raw = student.module_scores[moduleCode];
     const num = parseFloat(raw);
     if (!isNaN(num) && num > 0) return Math.min(100, Math.max(30, Math.round(num)));
   }
 
-  // 2. Deterministic pseudo-random variation based on student_id and moduleCode
+  // 3. Deterministic pseudo-random variation based on student_id and moduleCode
   // so each student has consistent but differentiated marks across modules
   const idStr = String(student.student_id || student.id || "STU-1");
   let hash = 0;

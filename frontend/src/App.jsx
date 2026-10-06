@@ -17,7 +17,7 @@ import { BelbinRoleModal } from './components/BelbinRoleModal';
 import { BatchGradingModal } from './components/BatchGradingModal';
 import { AiCopilotWidget } from './components/AiCopilotWidget';
 import { CurriculumModuleSelector } from './components/CurriculumModuleSelector';
-import { getCurriculumModules, getStudentModuleScore, getSemestersForYear } from './data/curriculumData';
+import { getCurriculumModules, getStudentModuleScore, getSemestersForYear, getPrerequisiteRecommendation } from './data/curriculumData';
 import { downloadKDUMarksheetTemplate, parseKDUMultiModuleSheet, parseFlatModuleSheet } from './services/kduMarksheetService';
 import { cleanStudentName, sanitizeSpreadsheetCell, getInitials, getAvatarBg } from './utils/studentUtils';
 import './App.css';
@@ -132,6 +132,8 @@ function App() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedModuleCode, setSelectedModuleCode] = useState('');
   const [filterByDegree, setFilterByDegree] = useState(false);
+  const [evaluationMode, setEvaluationMode] = useState('prerequisite'); // 'prerequisite' | 'gpa'
+  const [selectedPrerequisiteCode, setSelectedPrerequisiteCode] = useState('');
 
   const availableModules = useMemo(() => {
     return getCurriculumModules(selectedFaculty, selectedDegree, selectedYear, selectedSemester);
@@ -149,6 +151,16 @@ function App() {
     }
   }, [availableModules, selectedModuleCode]);
 
+  const isSem1 = useMemo(() => {
+    const sem = (selectedSemester || '').toLowerCase().trim();
+    return sem === 'semester i' || sem === 'semester 1' || sem === 'sem 1' || sem === 'sem i' || sem === '1';
+  }, [selectedSemester]);
+
+  const activePrerequisite = useMemo(() => {
+    if (!activeModule) return null;
+    return getPrerequisiteRecommendation(activeModule.code);
+  }, [activeModule]);
+
   const effectiveStudents = useMemo(() => {
     let list = students;
     if (filterByDegree && selectedDegree) {
@@ -159,14 +171,25 @@ function App() {
       });
       if (filtered.length > 0) list = filtered;
     }
-    return list.map(st => ({
-      ...st,
-      technical_score: activeModule ? getStudentModuleScore(st, activeModule.code, st.technical_score) : (st.technical_score || 75)
-    }));
-  }, [students, filterByDegree, selectedDegree, activeModule]);
+    return list.map(st => {
+      let score = st.technical_score || 75;
+      if (isSem1) {
+        // Semester 1 intake: always evaluate based on A/L Z-Score baseline
+        score = getStudentModuleScore(st, 'AL_ZSCORE', st.technical_score);
+      } else if (activeModule) {
+        // Semester 2 and above: evaluate based on related prerequisite module
+        const prereqCode = activePrerequisite?.code || selectedPrerequisiteCode || activeModule.code;
+        score = getStudentModuleScore(st, prereqCode, st.technical_score);
+      }
+      return {
+        ...st,
+        technical_score: score
+      };
+    });
+  }, [students, filterByDegree, selectedDegree, activeModule, isSem1, activePrerequisite, selectedPrerequisiteCode]);
 
   const moduleStats = useMemo(() => {
-    if (!activeModule || effectiveStudents.length === 0) {
+    if ((!activeModule && !isSem1) || effectiveStudents.length === 0) {
       return { avg: 0, max: 0, min: 0, count: 0 };
     }
     const scores = effectiveStudents.map(s => s.technical_score || 0);
@@ -175,7 +198,7 @@ function App() {
     const max = Math.max(...scores);
     const min = Math.min(...scores);
     return { avg, max, min, count: effectiveStudents.length };
-  }, [effectiveStudents, activeModule]);
+  }, [effectiveStudents, activeModule, isSem1]);
 
   const handleDownloadKDUTemplate = () => {
     downloadKDUMarksheetTemplate(
@@ -2027,9 +2050,15 @@ function App() {
                   <th>Belbin Role</th>
                   <th>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span>Subject Competency</span>
+                      <span>Competency Metric</span>
                       <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'normal', fontFamily: 'monospace' }}>
-                        {activeModule ? `[${activeModule.code}] ${activeModule.name.length > 20 ? activeModule.name.slice(0, 18) + '...' : activeModule.name}` : '(Base Tech Score)'}
+                        {isSem1
+                          ? activeModule 
+                            ? `[${activeModule.code}] via G.C.E. A/L Z-Score`
+                            : 'G.C.E. A/L Intake Z-Score'
+                          : activeModule
+                            ? `[${activeModule.code}] via Prereq [${activePrerequisite?.code || 'PREREQ'}]`
+                            : '(Base Tech Score)'}
                       </span>
                     </div>
                   </th>
@@ -2066,20 +2095,35 @@ function App() {
                             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', maxWidth: '240px' }}>
                               {Object.entries(student.module_scores).map(([mCode, mScore]) => {
                                 const isCurrentActive = activeModule?.code === mCode;
+                                const isCurrentPrereq = isSem1
+                                  ? mCode === 'AL_ZSCORE'
+                                  : (activePrerequisite && activePrerequisite.code === mCode);
                                 return (
                                   <span
                                     key={mCode}
-                                    title={`Module: ${mCode} | Mark: ${mScore}%`}
+                                    title={`Module: ${mCode} | Mark: ${mScore}${mCode === 'AL_ZSCORE' ? ' (Z-Score)' : '%'}${isCurrentPrereq ? ' (Active Evaluation Benchmark)' : ''}`}
                                     style={{
                                       fontSize: '10px',
                                       padding: '1px 5px',
                                       borderRadius: '4px',
-                                      background: isCurrentActive ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.08)',
-                                      color: isCurrentActive ? '#c7d2fe' : '#94a3b8',
-                                      border: isCurrentActive ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.12)'
+                                      background: isCurrentPrereq
+                                        ? 'rgba(16, 185, 129, 0.35)'
+                                        : isCurrentActive
+                                          ? 'rgba(99, 102, 241, 0.4)'
+                                          : 'rgba(255, 255, 255, 0.08)',
+                                      color: isCurrentPrereq
+                                        ? '#6ee7b7'
+                                        : isCurrentActive
+                                          ? '#c7d2fe'
+                                          : '#94a3b8',
+                                      border: isCurrentPrereq
+                                        ? '1px solid #10b981'
+                                        : isCurrentActive
+                                          ? '1px solid #818cf8'
+                                          : '1px solid rgba(255, 255, 255, 0.12)'
                                     }}
                                   >
-                                    {mCode}: <strong>{mScore}%</strong>
+                                    {isCurrentPrereq ? '⭐ ' : ''}{mCode}: <strong>{mScore}{mCode === 'AL_ZSCORE' ? '' : '%'}</strong>
                                   </span>
                                 );
                               })}
@@ -2158,6 +2202,10 @@ function App() {
             filterByDegree={filterByDegree}
             setFilterByDegree={setFilterByDegree}
             moduleStats={moduleStats}
+            evaluationMode={evaluationMode}
+            setEvaluationMode={setEvaluationMode}
+            selectedPrerequisiteCode={selectedPrerequisiteCode}
+            setSelectedPrerequisiteCode={setSelectedPrerequisiteCode}
           />
 
           <div className="alloc-container">

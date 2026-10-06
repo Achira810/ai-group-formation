@@ -326,6 +326,15 @@ export const parseFlatModuleSheet = (rawData, availableModules = []) => {
       const val = row[colName];
       if (val === undefined || val === null || val === '') return;
 
+      const upperCol = colName.toUpperCase();
+      if (upperCol.includes('Z-SCORE') || upperCol.includes('ZSCORE') || upperCol.includes('AL_ZSCORE')) {
+        const num = parseFloat(val);
+        if (!isNaN(num)) {
+          moduleScores["AL_ZSCORE"] = num;
+        }
+        return;
+      }
+
       // Check if colName contains a module code or matches an available module
       const codeMatch = colName.match(/\b([A-Z]{2,4}\d{4,5}[A-Z]?)\b/);
       if (codeMatch) {
