@@ -27,5 +27,9 @@ backend/target/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+# Documents & Reports
+*.docx
+*.doc
+*report*.*
+generate_report*.py
 
