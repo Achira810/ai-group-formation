@@ -95,6 +95,16 @@ function App() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // KDU Academic Curriculum & Evaluation Module Selector States (Starts completely unfilled)
+  const [selectedFaculty, setSelectedFaculty] = useState('');
+  const [selectedDegree, setSelectedDegree] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedModuleCode, setSelectedModuleCode] = useState('');
+  const [filterByDegree, setFilterByDegree] = useState(false);
+  const [evaluationMode, setEvaluationMode] = useState('prerequisite'); // 'prerequisite' | 'gpa'
+  const [selectedPrerequisiteCode, setSelectedPrerequisiteCode] = useState('');
+
   const [formData, setFormData] = useState({
     studentId: '',
     fullName: '',
@@ -133,16 +143,6 @@ function App() {
 
   const [allocationMode, setAllocationMode] = useState('groupSize');
   const [allocationValue, setAllocationValue] = useState('');
-
-  // KDU Academic Curriculum & Evaluation Module Selector States (Starts completely unfilled)
-  const [selectedFaculty, setSelectedFaculty] = useState('');
-  const [selectedDegree, setSelectedDegree] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
-  const [selectedModuleCode, setSelectedModuleCode] = useState('');
-  const [filterByDegree, setFilterByDegree] = useState(false);
-  const [evaluationMode, setEvaluationMode] = useState('prerequisite'); // 'prerequisite' | 'gpa'
-  const [selectedPrerequisiteCode, setSelectedPrerequisiteCode] = useState('');
 
   const availableModules = useMemo(() => {
     return getCurriculumModules(selectedFaculty, selectedDegree, selectedYear, selectedSemester);
