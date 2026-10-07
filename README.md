@@ -153,7 +153,7 @@ Developed by:
 - **[Duvindu Lasath](https://github.com/Lasath192)**
 - **Piravahiny**
 - **Wageesha Muthugala**
-- **Maheshika Banagala**
+- **[Maheshika Banagala](https://github.com/Maheshika2001)**
 
 ---
 
