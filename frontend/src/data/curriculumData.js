@@ -578,6 +578,17 @@ export const getCurriculumModules = (faculty, degree, year, semester) => {
 // Maps target project modules to their foundation prerequisite modules
 // ====================================================================
 export const CURRICULUM_PREREQUISITES = {
+  // English & Communication Skills Sequence
+  "DL2142": { code: "DL1132", name: "English: Basic Study Skills for CS/SE/CE", reason: "Basic English study skills" },
+  "DL3152": { code: "DL2142", name: "English: Advance Study Skills for CS/SE/CE", reason: "Advanced academic English & study skills" },
+  "DL4162": { code: "DL3152", name: "Writing and Speaking Skills", reason: "Academic writing & speaking foundation" },
+
+  // Management, Leadership & Defence
+  "MF2112": { code: "LS1052", name: "Leadership Training", reason: "Organizational & leadership baseline" },
+  "MS3032": { code: "LS1052", name: "Leadership Training", reason: "Leadership & strategic defence studies" },
+  "CS31012": { code: "MF2112", name: "Principles of Management", reason: "Professional legal and managerial context" },
+  "SE31022": { code: "MF2112", name: "Principles of Management", reason: "Engineering economics & financial principles" },
+
   // Year 1 Semester II
   "CS12012": { code: "CS11012", name: "Fundamentals of Programming", reason: "Web script & coding baseline" },
   "CS12023": { code: "CS11012", name: "Fundamentals of Programming", reason: "Foundational programming & syntax" },
@@ -611,9 +622,29 @@ export const CURRICULUM_PREREQUISITES = {
   "CS31022": { code: "CM11033", name: "Probability and Statistics", reason: "Empirical data analysis & research" },
   "CS31032": { code: "CS21032", name: "Advanced Object Oriented Programming", reason: "Mobile app architecture & OOP" },
   "CS31042": { code: "CS21042", name: "Advanced Computer Networks", reason: "Network security & protocols" },
+  "CS31062": { code: "CS12012", name: "Web Development", reason: "UX & UI front-end design foundation" },
+  "CS31072": { code: "CS11042", name: "Fundamentals of Databases (incl. Practical)", reason: "Database concepts & data management" },
+  "SE31012": { code: "SE22022", name: "Software Architecture", reason: "Software construction & design patterns" },
   "CS32023": { code: "CS22023", name: "Artificial Intelligence", reason: "AI reasoning foundation for ML" },
   "CS32032": { code: "CS31042", name: "Computer and Network Security", reason: "Advanced security defense" },
-  "CS32043": { code: "CS22012", name: "Advanced Data Structures and Algorithms", reason: "Data mining & algorithmic complexity" }
+  "CS32042": { code: "CS31042", name: "Computer and Network Security", reason: "Information security & protocols" },
+  "CS32043": { code: "CS22012", name: "Advanced Data Structures and Algorithms", reason: "Data mining & algorithmic complexity" },
+  "CS32092": { code: "CS22023", name: "Artificial Intelligence", reason: "Machine learning foundation" },
+  "SE32012": { code: "SE21012", name: "Requirements Engineering", reason: "Verification and validation standards" },
+  "SE32022": { code: "CS21052", name: "Advanced Web Development", reason: "Rapid application frameworks" },
+  "SE32992": { code: "CS31022", name: "Research Methodology", reason: "Independent research study foundation" },
+  "CM32051": { code: "CM21032", name: "Statistical Distributions and Inference", reason: "Statistical computing tools" },
+
+  // Year 4 Semester VII
+  "CS4012": { code: "CS11032", name: "Foundation of Computer Science", reason: "Theoretical computer science trends" },
+  "CS4022": { code: "CS11012", name: "Fundamentals of Programming", reason: "Programming language paradigms" },
+  "CS4032": { code: "CS22023", name: "Artificial Intelligence", reason: "Natural language & cognitive computing" },
+  "CS4042": { code: "CS32092", name: "Machine Learning", reason: "Advanced machine learning models" },
+  "SE4012": { code: "SE12012", name: "Software Analysis and Modeling", reason: "Formal software verification" },
+  "SE4022": { code: "SE22022", name: "Software Architecture", reason: "Software evolution and maintenance" },
+  "SE4042": { code: "SE32012", name: "Software Verification and Validation", reason: "Quality assurance & testing" },
+  "CS4999": { code: "CS31022", name: "Research Methodology", reason: "Final individual research project" },
+  "SE4999": { code: "SE32992", name: "Independent Research Study", reason: "Final SE research project" }
 };
 
 // Retrieve intelligent prerequisite recommendation for a given target module
@@ -628,11 +659,23 @@ export const getPrerequisiteRecommendation = (targetModuleCode) => {
   if (upper.startsWith("CS11") || upper.startsWith("COE11") || upper.startsWith("CM11") || upper.startsWith("SE11")) {
     return { code: "AL_ZSCORE", name: "A/L Z-Score & School Aptitude Intake", reason: "Direct school intake foundation" };
   }
+  if (upper.startsWith("DL") || upper.includes("ENGLISH") || upper.includes("WRITING") || upper.includes("SPEAKING")) {
+    return { code: "DL1132", name: "English: Basic Study Skills for CS/SE/CE", reason: "Foundational academic English communication" };
+  }
+  if (upper.startsWith("MF") || upper.startsWith("LS") || upper.startsWith("MS") || upper.includes("MANAGEMENT") || upper.includes("LEADER")) {
+    return { code: "LS1052", name: "Leadership Training", reason: "Organizational & leadership baseline" };
+  }
   if (upper.includes("SE") || upper.includes("PROJECT")) {
     return { code: "SE11012", name: "Software Development Methodologies", reason: "Software process & teamwork foundation" };
   }
-  if (upper.includes("CM") || upper.includes("MATH")) {
+  if (upper.includes("CM") || upper.includes("MATH") || upper.includes("CALCULUS") || upper.includes("STAT")) {
     return { code: "CM11102", name: "Mathematics for Computing", reason: "Foundational mathematics" };
+  }
+  if (upper.startsWith("COE") || upper.includes("HARDWARE") || upper.includes("ELECTRONIC")) {
+    return { code: "COE11013", name: "Computer Systems Architecture", reason: "Hardware & digital architecture foundation" };
+  }
+  if (upper.includes("WEB") || upper.includes("DATABASE") || upper.includes("SQL")) {
+    return { code: "CS11042", name: "Fundamentals of Databases (incl. Practical)", reason: "Data storage & information systems" };
   }
   return { code: "CS11012", name: "Fundamentals of Programming", reason: "Core computing & logic foundation" };
 };
@@ -743,24 +786,70 @@ export const getStudentModuleScore = (student, moduleCode, baseTechScore = 75) =
 // Classifies a module into its academic subject areas/domains
 export const getModuleAcademicDomains = (mod) => {
   if (!mod) return [];
-  const text = ((mod.code || '') + ' ' + (mod.name || '')).toUpperCase();
+  const code = (mod.code || '').toUpperCase().trim();
+  const name = (mod.name || '').toUpperCase().trim();
+  const text = `${code} ${name}`;
   const domains = [];
 
-  // Mathematics & Statistics
+  // 1. English, Writing, Linguistics & Professional Communication
   if (
-    mod.code?.toUpperCase().startsWith('CM') ||
+    code.startsWith('DL') ||
+    text.includes('ENGLISH') ||
+    text.includes('WRITING') ||
+    text.includes('SPEAKING') ||
+    text.includes('STUDY SKILLS') ||
+    text.includes('COMMUNICATION SKILLS') ||
+    text.includes('LANGUAGE') ||
+    text.includes('LITERATURE')
+  ) {
+    domains.push('ENGLISH_COMMUNICATION');
+  }
+
+  // 2. Management, Leadership, Strategic Defence & Economics
+  if (
+    code.startsWith('MF') ||
+    code.startsWith('LS') ||
+    code.startsWith('MS') ||
+    code.startsWith('MGT') ||
+    code.startsWith('LW') ||
+    text.includes('MANAGEMENT') ||
+    text.includes('LEADERSHIP') ||
+    text.includes('DEFENCE STUDIES') ||
+    text.includes('DEFENSE') ||
+    text.includes('COMPUTER LAW') ||
+    text.includes('ENGINEERING ECONOMICS') ||
+    text.includes('LAW')
+  ) {
+    domains.push('MANAGEMENT_LEADERSHIP');
+  }
+
+  // 3. Research Methodology & Academic Investigation
+  if (
+    text.includes('RESEARCH METHODOLOGY') ||
+    text.includes('RESEARCH STUDY') ||
+    text.includes('RESEARCH PROJECT') ||
+    text.includes('RESEARCH WRITING') ||
+    text.includes('INDEPENDENT RESEARCH')
+  ) {
+    domains.push('RESEARCH_SKILLS');
+  }
+
+  // 4. Mathematics & Statistics
+  if (
+    code.startsWith('CM') ||
     text.includes('MATH') ||
     text.includes('CALCULUS') ||
     text.includes('STATISTIC') ||
     text.includes('PROBABILITY') ||
     text.includes('DISCRETE') ||
     text.includes('NUMERICAL') ||
-    text.includes('ALGEBRA')
+    text.includes('ALGEBRA') ||
+    text.includes('GEOMETRY')
   ) {
     domains.push('MATHEMATICS');
   }
 
-  // Core Programming, Data Structures, Algorithms, AI
+  // 5. Core Programming, Data Structures, Algorithms, AI, ML
   if (
     text.includes('PROGRAMMING') ||
     text.includes('DATA STRUCTURE') ||
@@ -769,70 +858,83 @@ export const getModuleAcademicDomains = (mod) => {
     text.includes('OOP') ||
     text.includes('PYTHON') ||
     text.includes('JAVA') ||
-    text.includes('LOGIC') ||
+    text.includes('LOGIC PROGRAMMING') ||
     text.includes('ARTIFICIAL INTELLIGENCE') ||
     text.includes('MACHINE LEARNING') ||
     text.includes('AUTOMATA') ||
-    text.includes('INTELLIGEN')
+    text.includes('NATURAL LANGUAGE') ||
+    text.includes('COGNITIVE SYSTEMS') ||
+    text.includes('BIOINFORMATICS') ||
+    text.includes('COMPUTER GRAPHICS') ||
+    text.includes('IMAGE PROCESSING')
   ) {
     domains.push('PROGRAMMING');
   }
 
-  // Software Engineering & Project Management
+  // 6. Software Engineering & Project Management
   if (
-    mod.code?.toUpperCase().startsWith('SE') ||
+    code.startsWith('SE') ||
     text.includes('SOFTWARE') ||
     text.includes('REQUIREMENT') ||
-    text.includes('ARCHITECTURE') ||
+    text.includes('SOFTWARE ARCHITECTURE') ||
     text.includes('ANALYSIS AND MODEL') ||
     text.includes('PROJECT MANAGEMENT') ||
     text.includes('METHODOLOG') ||
     text.includes('QUALITY ASSURANCE') ||
-    text.includes('GROUP PROJECT')
+    text.includes('GROUP PROJECT') ||
+    text.includes('VERIFICATION') ||
+    text.includes('RAPID APPLICATION')
   ) {
     domains.push('SOFTWARE_ENG');
   }
 
-  // Systems, Hardware, Electronics, Architecture
+  // 7. Systems, Hardware, Electronics, Microprocessors
   if (
-    mod.code?.toUpperCase().startsWith('COE') ||
+    code.startsWith('COE') ||
     text.includes('HARDWARE') ||
-    text.includes('ARCHITECTURE') ||
+    text.includes('COMPUTER SYSTEMS ARCHITECTURE') ||
     text.includes('ELECTRONIC') ||
     text.includes('MICROPROCESSOR') ||
+    text.includes('MICROCONTROLLER') ||
     text.includes('INTERFACING') ||
     text.includes('OPERATING SYSTEM') ||
     text.includes('EMBEDDED') ||
-    text.includes('DIGITAL')
+    text.includes('DIGITAL LOGIC') ||
+    text.includes('ROBOTICS')
   ) {
     domains.push('SYSTEMS_HARDWARE');
   }
 
-  // Networks, Telecom, Security
+  // 8. Networks, Telecom, Security
   if (
     text.includes('NETWORK') ||
     text.includes('SECURITY') ||
-    text.includes('COMMUNICATION') ||
+    (text.includes('COMMUNICATION') && !text.includes('WRITING') && !text.includes('SKILLS')) ||
     text.includes('WIRELESS') ||
     text.includes('CLOUD') ||
     text.includes('DISTRIBUTED') ||
-    text.includes('TELECOMMUNICATION')
+    text.includes('TELECOMMUNICATION') ||
+    text.includes('INTERNET OF THINGS')
   ) {
     domains.push('NETWORKS_SECURITY');
   }
 
-  // Web & Database
+  // 9. Web & Database Systems
   if (
     text.includes('WEB') ||
     text.includes('DATABASE') ||
     text.includes('DATA MANAGEMENT') ||
     text.includes('SQL') ||
-    text.includes('MEDIA')
+    text.includes('MEDIA TOOLS') ||
+    text.includes('UX AND UI') ||
+    text.includes('DATA MINING') ||
+    text.includes('BIG DATA') ||
+    text.includes('GEOINFORMATICS')
   ) {
     domains.push('WEB_DATABASE');
   }
 
-  // Engineering Core
+  // 10. Engineering Core (Civil, Mech, Electrical, Marine, Aero)
   if (
     text.includes('MECHANIC') ||
     text.includes('FLUID') ||
@@ -842,9 +944,25 @@ export const getModuleAcademicDomains = (mod) => {
     text.includes('MATERIAL') ||
     text.includes('STRUCTURE') ||
     text.includes('CIVIL') ||
-    text.includes('ELECTRICAL')
+    text.includes('ELECTRICAL') ||
+    text.includes('AERONAUTICAL') ||
+    text.includes('BIOMEDICAL') ||
+    text.includes('NAVAL')
   ) {
     domains.push('ENGINEERING_CORE');
+  }
+
+  // 11. Health Sciences / Medicine
+  if (
+    code.startsWith('AH') ||
+    text.includes('ANATOMY') ||
+    text.includes('PHYSIOLOGY') ||
+    text.includes('BIOCHEMISTRY') ||
+    text.includes('PHARMACOLOGY') ||
+    text.includes('PATHOLOGY') ||
+    text.includes('PATIENT CARE')
+  ) {
+    domains.push('HEALTH_SCIENCES');
   }
 
   return domains;
@@ -912,12 +1030,18 @@ export const getAllPrerequisiteRecommendations = (targetModule, faculty, degree,
     // B) Domain-based academic matching across all prior semesters
     else if (targetDomains.some(d => pDomains.includes(d))) {
       isMatch = true;
-      if (targetDomains.includes('MATHEMATICS')) {
+      if (targetDomains.includes('ENGLISH_COMMUNICATION')) {
+        matchReason = "Prior English & academic communication foundation";
+      } else if (targetDomains.includes('MANAGEMENT_LEADERSHIP')) {
+        matchReason = "Management, leadership & organizational skills";
+      } else if (targetDomains.includes('RESEARCH_SKILLS')) {
+        matchReason = "Research methodology & analytical writing skills";
+      } else if (targetDomains.includes('MATHEMATICS')) {
         matchReason = "Foundational mathematics & analytical methods";
       } else if (targetDomains.includes('PROGRAMMING')) {
         matchReason = "Core programming, algorithms & logic";
       } else if (targetDomains.includes('SOFTWARE_ENG')) {
-        matchReason = "Software development & modeling process";
+        matchReason = "Software development & engineering process";
       } else if (targetDomains.includes('SYSTEMS_HARDWARE')) {
         matchReason = "Hardware & computer systems architecture";
       } else if (targetDomains.includes('NETWORKS_SECURITY')) {
