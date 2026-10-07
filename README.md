@@ -151,7 +151,7 @@ Lecturers can upload an Excel/CSV file with the following column headers:
 Developed by:
 - **[Achira Hathsidu](https://github.com/Achira810)**
 - **[Duvindu Lasath](https://github.com/Lasath192)**
-- **Piravahiny**
+- **[Piravahiny](https://github.com/Piravahiny)**
 - **Wageesha Muthugala**
 - **[Maheshika Banagala](https://github.com/Maheshika2001)**
 
