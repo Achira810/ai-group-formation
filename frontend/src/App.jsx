@@ -98,8 +98,8 @@ function App() {
   const [formData, setFormData] = useState({
     studentId: '',
     fullName: '',
-    faculty: '',
-    program: '',
+    faculty: 'Faculty of Computing',
+    program: 'BSc (Hons) Computer Science',
     academicYear: '',
     semester: '',
     moduleCode: '',
@@ -120,8 +120,10 @@ function App() {
 
   const formAvailableModules = useMemo(() => {
     if (isFirstYearFirstSem) return [];
-    return getCurriculumModules(formData.faculty, formData.program, formData.academicYear, formData.semester);
-  }, [formData.faculty, formData.program, formData.academicYear, formData.semester, isFirstYearFirstSem]);
+    const fac = formData.faculty || selectedFaculty || 'Faculty of Computing';
+    const prog = formData.program || selectedDegree || 'BSc (Hons) Computer Science';
+    return getCurriculumModules(fac, prog, formData.academicYear, formData.semester);
+  }, [formData.faculty, formData.program, selectedFaculty, selectedDegree, formData.academicYear, formData.semester, isFirstYearFirstSem]);
 
   const matchedExistingStudent = useMemo(() => {
     if (!formData.studentId.trim()) return null;
@@ -981,15 +983,8 @@ function App() {
       return;
     }
 
-    if (!formData.faculty) {
-      alert("Please select a Faculty.");
-      return;
-    }
-
-    if (!formData.program) {
-      alert("Please select a Degree Program.");
-      return;
-    }
+    const effectiveFaculty = formData.faculty || selectedFaculty || 'Faculty of Computing';
+    const effectiveProgram = formData.program || selectedDegree || 'BSc (Hons) Computer Science';
 
     let calculatedTechScore = 75;
     let moduleScores = {};
@@ -1011,25 +1006,12 @@ function App() {
       calculatedTechScore = Math.min(100, Math.max(0, Math.round(mark)));
       moduleScores[formData.moduleCode] = calculatedTechScore;
     } else {
-      const rawScore = parseFloat(formData.scoreValue);
-      if (isNaN(rawScore)) {
-        alert("Please enter a numeric score value.");
+      const mark = parseFloat(formData.scoreValue);
+      if (isNaN(mark) || mark < 0 || mark > 100) {
+        alert("Please enter a valid numeric mark between 0 and 100.");
         return;
       }
-
-      if (formData.academicYear === '1st Year') {
-        if (rawScore < -2.0 || rawScore > 3.5) {
-          alert("For 1st Year, please enter a valid Z-Score between -2.0000 and 3.5000.");
-          return;
-        }
-        calculatedTechScore = calculateFuzzyScore('1st Year', rawScore);
-      } else {
-        if (rawScore < 0.0 || rawScore > 4.0) {
-          alert("For 2nd, 3rd, and 4th Year, please enter a valid GPA between 0.00 and 4.00.");
-          return;
-        }
-        calculatedTechScore = calculateFuzzyScore(formData.academicYear, rawScore);
-      }
+      calculatedTechScore = Math.min(100, Math.max(0, Math.round(mark)));
     }
 
     const existingStudent = students.find(
@@ -1102,7 +1084,7 @@ function App() {
       return;
     }
 
-    const degreeWithYear = `${formData.academicYear} - ${formData.program}`;
+    const degreeWithYear = `${formData.academicYear} - ${effectiveProgram}`;
 
     const newStudent = {
       student_id: trimmedId,
@@ -1978,9 +1960,13 @@ function App() {
                   const sems = yr ? getSemestersForYear(yr) : [];
                   const firstSem = sems[0] || '';
                   const isY1S1 = (yr === '1st Year' || yr === 'Year 1') && firstSem === 'Semester I';
-                  const mods = isY1S1 ? [] : getCurriculumModules(formData.faculty, formData.program, yr, firstSem);
+                  const fac = formData.faculty || selectedFaculty || 'Faculty of Computing';
+                  const prog = formData.program || selectedDegree || 'BSc (Hons) Computer Science';
+                  const mods = isY1S1 ? [] : getCurriculumModules(fac, prog, yr, firstSem);
                   setFormData({
                     ...formData,
+                    faculty: fac,
+                    program: prog,
                     academicYear: yr,
                     semester: firstSem,
                     moduleCode: isY1S1 ? '' : (mods.length > 0 ? mods[0].code : ''),
@@ -2005,9 +1991,13 @@ function App() {
                 onChange={(e) => {
                   const sem = e.target.value;
                   const isY1S1 = (formData.academicYear === '1st Year' || formData.academicYear === 'Year 1') && sem === 'Semester I';
-                  const mods = isY1S1 ? [] : getCurriculumModules(formData.faculty, formData.program, formData.academicYear, sem);
+                  const fac = formData.faculty || selectedFaculty || 'Faculty of Computing';
+                  const prog = formData.program || selectedDegree || 'BSc (Hons) Computer Science';
+                  const mods = isY1S1 ? [] : getCurriculumModules(fac, prog, formData.academicYear, sem);
                   setFormData({
                     ...formData,
+                    faculty: fac,
+                    program: prog,
                     semester: sem,
                     moduleCode: isY1S1 ? '' : (mods.length > 0 ? mods[0].code : ''),
                     scoreValue: ''
@@ -2043,7 +2033,7 @@ function App() {
             ) : (
               <div className="input-group col-5">
                 <label className="input-label">
-                  Evaluation Module {formAvailableModules.length > 0 ? `(${formAvailableModules.length} Modules in ${formData.semester})` : ''}
+                  Evaluation Module {formAvailableModules.length > 0 ? `(${formAvailableModules.length} Modules in ${formData.semester || ''})` : ''}
                 </label>
                 <select
                   className="modern-select"
@@ -2055,7 +2045,11 @@ function App() {
                   }}
                 >
                   <option value="">
-                    {formAvailableModules.length > 0 ? '-- Select Module --' : '(Select Year & Semester first)'}
+                    {!formData.academicYear || !formData.semester
+                      ? '(Select Year & Semester first)'
+                      : formAvailableModules.length > 0
+                        ? '-- Select Evaluation Module (or General Mark) --'
+                        : '(No curriculum modules found)'}
                   </option>
                   {formAvailableModules.map((mod) => {
                     const isAlreadyAdded = Boolean(matchedExistingStudent?.module_scores && matchedExistingStudent.module_scores[mod.code] !== undefined);
@@ -2083,16 +2077,16 @@ function App() {
                   ? 'A/L Z-Score (-2.0000 to 3.5000)'
                   : formData.moduleCode
                     ? `[${formData.moduleCode}] Mark (0 - 100)`
-                    : 'GPA (0.00 to 4.00)'}
+                    : 'Subject / Technical Mark (0 - 100)'}
               </label>
               <input
                 className="modern-input"
                 type="number"
-                step={isFirstYearFirstSem ? "0.0001" : formData.moduleCode ? "1" : "0.01"}
-                min={isFirstYearFirstSem ? "-2.0" : formData.moduleCode ? "0" : "0.0"}
-                max={isFirstYearFirstSem ? "3.5" : formData.moduleCode ? "100" : "4.0"}
+                step={isFirstYearFirstSem ? "0.0001" : "1"}
+                min={isFirstYearFirstSem ? "-2.0" : "0"}
+                max={isFirstYearFirstSem ? "3.5" : "100"}
                 value={formData.scoreValue}
-                placeholder={isFirstYearFirstSem ? "e.g. 1.854" : formData.moduleCode ? "e.g. 85" : "e.g. 3.75"}
+                placeholder={isFirstYearFirstSem ? "e.g. 1.854" : formData.moduleCode ? "e.g. 85" : "e.g. 75"}
                 required
                 onChange={(e) => setFormData({ ...formData, scoreValue: e.target.value })}
               />
