@@ -4,15 +4,28 @@
 [![Vite](https://img.shields.io/badge/Vite-5.0-purple?logo=vite)](https://vitejs.dev/)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange?logo=openjdk)](https://www.oracle.com/java/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?logo=supabase)](https://supabase.com/)
+[![Vercel](https://img.shields.io/badge/Live%20Demo-ai--group--formation.vercel.app-black?logo=vercel&logoColor=white)](https://ai-group-formation.vercel.app/)
 [![License](https://img.shields.io/badge/License-MIT-green)](#license)
 
 An automated, intelligent student team optimization platform designed for **General Sir John Kotelawala Defence University (KDU)**. The system leverages a 3-stage hybrid AI pipeline—**Fuzzy Logic Skill Profiling**, **K-Means Cohort Stratification**, and a **Genetic Algorithm Balancing Engine**—to construct fair, balanced, and cross-disciplinary student teams.
 
+🌐 **Live Deployment:** [https://ai-group-formation.vercel.app/](https://ai-group-formation.vercel.app/)
+
 ---
 
-## 📸 Dashboard Preview
+## 📸 Dashboard Previews
 
-![KDU AI Group Formation System Dashboard](docs/images/dashboard-screenshot.png)
+### 1. System Header, Empirical Suite & Benchmarking Arena
+![KDU AI Group Formation System Suite](docs/images/01-hero-suite-overview.png)
+
+### 2. Student Registration & Roster with Real-Time Competency Metrics
+![Student Registration and Roster](docs/images/02-student-registration-roster.png)
+
+### 3. Academic Curriculum & Module-Specific Competency Profiler
+![Curriculum and Module Profiler](docs/images/03-curriculum-module-profiler.png)
+
+### 4. AI-Optimized Balanced Team Allocations & Synergy Scores
+![Optimized Team Allocations](docs/images/04-optimized-team-allocations.png)
 
 ---
 
@@ -127,6 +140,9 @@ Lecturers can upload an Excel/CSV file with the following column headers:
 Developed by:
 - **[Achira Hathsidu](https://github.com/Achira810)**
 - **Lasath**
+- **Piravahiny**
+- **Wageesha Muthugala**
+- **Maheshika Banagala**
 
 ---
 
