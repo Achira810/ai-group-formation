@@ -17,7 +17,14 @@ import { BelbinRoleModal } from './components/BelbinRoleModal';
 import { BatchGradingModal } from './components/BatchGradingModal';
 import { AiCopilotWidget } from './components/AiCopilotWidget';
 import { CurriculumModuleSelector } from './components/CurriculumModuleSelector';
-import { getCurriculumModules, getStudentModuleScore, getSemestersForYear, getPrerequisiteRecommendation } from './data/curriculumData';
+import {
+  getCurriculumModules,
+  getStudentModuleScore,
+  getSemestersForYear,
+  getPrerequisiteRecommendation,
+  getAllPrerequisiteRecommendations,
+  getStudentAggregateScore
+} from './data/curriculumData';
 import { downloadKDUMarksheetTemplate, parseKDUMultiModuleSheet, parseFlatModuleSheet } from './services/kduMarksheetService';
 import { cleanStudentName, sanitizeSpreadsheetCell, getInitials, getAvatarBg } from './utils/studentUtils';
 import './App.css';
@@ -156,10 +163,20 @@ function App() {
     return sem === 'semester i' || sem === 'semester 1' || sem === 'sem 1' || sem === 'sem i' || sem === '1';
   }, [selectedSemester]);
 
+  const activePrerequisites = useMemo(() => {
+    if (!activeModule) return [];
+    return getAllPrerequisiteRecommendations(
+      activeModule,
+      selectedFaculty,
+      selectedDegree,
+      selectedYear,
+      selectedSemester
+    );
+  }, [activeModule, selectedFaculty, selectedDegree, selectedYear, selectedSemester]);
+
   const activePrerequisite = useMemo(() => {
-    if (!activeModule) return null;
-    return getPrerequisiteRecommendation(activeModule.code);
-  }, [activeModule]);
+    return activePrerequisites[0] || (activeModule ? getPrerequisiteRecommendation(activeModule.code) : null);
+  }, [activePrerequisites, activeModule]);
 
   const effectiveStudents = useMemo(() => {
     let list = students;
@@ -176,8 +193,10 @@ function App() {
       if (isSem1) {
         // Semester 1 intake: always evaluate based on A/L Z-Score baseline
         score = getStudentModuleScore(st, 'AL_ZSCORE', st.technical_score);
+      } else if (activeModule && activePrerequisites.length > 0) {
+        // Semester 2 and above: evaluate based on aggregate competency across all matching related subjects from prior semesters!
+        score = getStudentAggregateScore(st, activePrerequisites, st.technical_score);
       } else if (activeModule) {
-        // Semester 2 and above: evaluate based on related prerequisite module
         const prereqCode = activePrerequisite?.code || selectedPrerequisiteCode || activeModule.code;
         score = getStudentModuleScore(st, prereqCode, st.technical_score);
       }
@@ -186,7 +205,7 @@ function App() {
         technical_score: score
       };
     });
-  }, [students, filterByDegree, selectedDegree, activeModule, isSem1, activePrerequisite, selectedPrerequisiteCode]);
+  }, [students, filterByDegree, selectedDegree, activeModule, isSem1, activePrerequisites, activePrerequisite, selectedPrerequisiteCode]);
 
   const moduleStats = useMemo(() => {
     if ((!activeModule && !isSem1) || effectiveStudents.length === 0) {
@@ -2139,7 +2158,9 @@ function App() {
                             ? `[${activeModule.code}] via G.C.E. A/L Z-Score`
                             : 'G.C.E. A/L Intake Z-Score'
                           : activeModule
-                            ? `[${activeModule.code}] via Prereq [${activePrerequisite?.code || 'PREREQ'}]`
+                            ? activePrerequisites.length > 1
+                              ? `[${activeModule.code}] via ${activePrerequisites.length} Prior Sem Prereqs (${activePrerequisites.map(p => p.code).join(', ')})`
+                              : `[${activeModule.code}] via Prereq [${activePrerequisite?.code || 'PREREQ'}]`
                             : '(Base Tech Score)'}
                       </span>
                     </div>
@@ -2177,35 +2198,35 @@ function App() {
                             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', maxWidth: '240px' }}>
                               {Object.entries(student.module_scores).map(([mCode, mScore]) => {
                                 const isCurrentActive = activeModule?.code === mCode;
-                                const isCurrentPrereq = isSem1
+                                const isMatchingPrereq = isSem1
                                   ? mCode === 'AL_ZSCORE'
-                                  : (activePrerequisite && activePrerequisite.code === mCode);
+                                  : activePrerequisites.some(p => p.code === mCode);
                                 return (
                                   <span
                                     key={mCode}
-                                    title={`Module: ${mCode} | Mark: ${mScore}${mCode === 'AL_ZSCORE' ? ' (Z-Score)' : '%'}${isCurrentPrereq ? ' (Active Evaluation Benchmark)' : ''}`}
+                                    title={`Module: ${mCode} | Mark: ${mScore}${mCode === 'AL_ZSCORE' ? ' (Z-Score)' : '%'}${isMatchingPrereq ? ' (Active Evaluation Benchmark from Prior Semesters)' : ''}`}
                                     style={{
                                       fontSize: '10px',
                                       padding: '1px 5px',
                                       borderRadius: '4px',
-                                      background: isCurrentPrereq
+                                      background: isMatchingPrereq
                                         ? 'rgba(16, 185, 129, 0.35)'
                                         : isCurrentActive
                                           ? 'rgba(99, 102, 241, 0.4)'
                                           : 'rgba(255, 255, 255, 0.08)',
-                                      color: isCurrentPrereq
+                                      color: isMatchingPrereq
                                         ? '#6ee7b7'
                                         : isCurrentActive
                                           ? '#c7d2fe'
                                           : '#94a3b8',
-                                      border: isCurrentPrereq
+                                      border: isMatchingPrereq
                                         ? '1px solid #10b981'
                                         : isCurrentActive
                                           ? '1px solid #818cf8'
                                           : '1px solid rgba(255, 255, 255, 0.12)'
                                     }}
                                   >
-                                    {isCurrentPrereq ? '⭐ ' : ''}{mCode}: <strong>{mScore}{mCode === 'AL_ZSCORE' ? '' : '%'}</strong>
+                                    {isMatchingPrereq ? '⭐ ' : ''}{mCode}: <strong>{mScore}{mCode === 'AL_ZSCORE' ? '' : '%'}</strong>
                                   </span>
                                 );
                               })}

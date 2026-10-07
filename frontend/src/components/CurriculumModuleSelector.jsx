@@ -5,7 +5,8 @@ import {
   DEGREE_CURRICULUM,
   getSemestersForYear,
   getPrerequisiteRecommendation,
-  getAvailablePriorModules
+  getAvailablePriorModules,
+  getAllPrerequisiteRecommendations
 } from '../data/curriculumData';
 
 export const CurriculumModuleSelector = ({
@@ -105,6 +106,17 @@ export const CurriculumModuleSelector = ({
     return activeModule ? getPrerequisiteRecommendation(activeModule.code) : null;
   }, [activeModule]);
 
+  const allPrerequisites = useMemo(() => {
+    if (!activeModule) return [];
+    return getAllPrerequisiteRecommendations(
+      activeModule,
+      selectedFaculty,
+      selectedDegree,
+      selectedYear,
+      selectedSemester
+    );
+  }, [activeModule, selectedFaculty, selectedDegree, selectedYear, selectedSemester]);
+
   const availablePriorModules = useMemo(() => {
     return getAvailablePriorModules(selectedFaculty, selectedDegree, selectedYear, selectedSemester);
   }, [selectedFaculty, selectedDegree, selectedYear, selectedSemester]);
@@ -114,13 +126,15 @@ export const CurriculumModuleSelector = ({
     if (setSelectedPrerequisiteCode) {
       if (isSem1) {
         setSelectedPrerequisiteCode('AL_ZSCORE');
+      } else if (allPrerequisites.length > 0) {
+        setSelectedPrerequisiteCode(allPrerequisites.map(p => p.code).join(', '));
       } else if (activeModule && prerequisiteInfo?.code) {
         setSelectedPrerequisiteCode(prerequisiteInfo.code);
       } else {
         setSelectedPrerequisiteCode('');
       }
     }
-  }, [activeModule?.code, prerequisiteInfo?.code, isSem1, setSelectedPrerequisiteCode]);
+  }, [activeModule?.code, prerequisiteInfo?.code, isSem1, allPrerequisites, setSelectedPrerequisiteCode]);
 
   return (
     <div style={{
@@ -564,50 +578,103 @@ export const CurriculumModuleSelector = ({
       ) : selectedSemester && !isSem1 && activeModule ? (
         <div style={{
           marginBottom: '16px',
-          padding: '14px 18px',
+          padding: '16px 20px',
           borderRadius: '12px',
           background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%)',
           border: '1.5px solid rgba(16, 185, 129, 0.45)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '14px',
-          flexWrap: 'wrap'
+          flexDirection: 'column',
+          gap: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '26px' }}>🔗</span>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>Related Prerequisite Subject for [{activeModule.code}]</span>
-                <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.5)', fontWeight: '700' }}>
-                  AUTOMATIC BENCHMARK
-                </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '26px' }}>🔗</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>Related Prerequisite Subjects for [{activeModule.code}] from Prior Semesters</span>
+                  <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.5)', fontWeight: '700' }}>
+                    {allPrerequisites.length > 1 ? `CUMULATIVE BENCHMARK (${allPrerequisites.length} MODULES)` : 'AUTOMATIC BENCHMARK'}
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                  Students haven't taken the final exam for <strong>{activeModule.name}</strong> yet. The AI engine automatically balances teams by aggregating students' competency across <strong>all matching foundational subjects from preceding semesters</strong>:
+                </p>
               </div>
-              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
-                Students haven't taken the final exam for <strong>{activeModule.name}</strong> yet. The AI engine automatically balances teams using their competency in the foundational prerequisite subject:
-              </p>
             </div>
           </div>
 
+          {/* List of ALL matching prerequisite subjects from prior semesters */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '9px 18px',
-            borderRadius: '10px',
-            background: 'rgba(16, 185, 129, 0.18)',
-            border: '1.5px solid #10b981',
-            color: '#a7f3d0',
-            fontSize: '12px',
-            fontWeight: '700'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '10px',
+            marginTop: '2px'
           }}>
-            <span>⭐</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '800' }}>[{prerequisiteInfo?.code || 'PREREQ'}]</span>
-            <span style={{ fontWeight: '700' }}>{prerequisiteInfo?.name || 'Foundational Subject'}</span>
-            {prerequisiteInfo?.reason && (
-              <span style={{ fontSize: '11px', color: '#6ee7b7', fontWeight: '500', marginLeft: '4px', opacity: 0.9 }}>
-                • {prerequisiteInfo.reason}
-              </span>
+            {allPrerequisites.length > 0 ? (
+              allPrerequisites.map((prereq) => (
+                <div
+                  key={prereq.code}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    background: 'rgba(16, 185, 129, 0.16)',
+                    border: '1.5px solid rgba(16, 185, 129, 0.55)',
+                    color: '#a7f3d0'
+                  }}
+                >
+                  <span style={{ fontSize: '16px', marginTop: '2px' }}>⭐</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '800', color: '#6ee7b7', fontSize: '12px' }}>
+                        [{prereq.code}]
+                      </span>
+                      <span style={{ fontWeight: '700', fontSize: '12px', color: '#f8fafc' }}>
+                        {prereq.name}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      {prereq.semesterLabel && (
+                        <span style={{
+                          fontSize: '10px',
+                          background: 'rgba(99, 102, 241, 0.25)',
+                          color: '#c7d2fe',
+                          padding: '2px 7px',
+                          borderRadius: '4px',
+                          border: '1px solid rgba(99, 102, 241, 0.45)',
+                          fontWeight: '600'
+                        }}>
+                          {prereq.semesterLabel}
+                        </span>
+                      )}
+                      {prereq.reason && (
+                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                          • {prereq.reason}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '9px 18px',
+                borderRadius: '10px',
+                background: 'rgba(16, 185, 129, 0.18)',
+                border: '1.5px solid #10b981',
+                color: '#a7f3d0',
+                fontSize: '12px',
+                fontWeight: '700'
+              }}>
+                <span>⭐</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: '800' }}>[{prerequisiteInfo?.code || 'PREREQ'}]</span>
+                <span style={{ fontWeight: '700' }}>{prerequisiteInfo?.name || 'Foundational Subject'}</span>
+              </div>
             )}
           </div>
         </div>

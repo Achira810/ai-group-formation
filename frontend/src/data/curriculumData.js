@@ -739,3 +739,260 @@ export const getStudentModuleScore = (student, moduleCode, baseTechScore = 75) =
   const calculated = Math.min(99, Math.max(45, Math.round(base + variance)));
   return calculated;
 };
+
+// Classifies a module into its academic subject areas/domains
+export const getModuleAcademicDomains = (mod) => {
+  if (!mod) return [];
+  const text = ((mod.code || '') + ' ' + (mod.name || '')).toUpperCase();
+  const domains = [];
+
+  // Mathematics & Statistics
+  if (
+    mod.code?.toUpperCase().startsWith('CM') ||
+    text.includes('MATH') ||
+    text.includes('CALCULUS') ||
+    text.includes('STATISTIC') ||
+    text.includes('PROBABILITY') ||
+    text.includes('DISCRETE') ||
+    text.includes('NUMERICAL') ||
+    text.includes('ALGEBRA')
+  ) {
+    domains.push('MATHEMATICS');
+  }
+
+  // Core Programming, Data Structures, Algorithms, AI
+  if (
+    text.includes('PROGRAMMING') ||
+    text.includes('DATA STRUCTURE') ||
+    text.includes('ALGORITHM') ||
+    text.includes('OBJECT ORIENTED') ||
+    text.includes('OOP') ||
+    text.includes('PYTHON') ||
+    text.includes('JAVA') ||
+    text.includes('LOGIC') ||
+    text.includes('ARTIFICIAL INTELLIGENCE') ||
+    text.includes('MACHINE LEARNING') ||
+    text.includes('AUTOMATA') ||
+    text.includes('INTELLIGEN')
+  ) {
+    domains.push('PROGRAMMING');
+  }
+
+  // Software Engineering & Project Management
+  if (
+    mod.code?.toUpperCase().startsWith('SE') ||
+    text.includes('SOFTWARE') ||
+    text.includes('REQUIREMENT') ||
+    text.includes('ARCHITECTURE') ||
+    text.includes('ANALYSIS AND MODEL') ||
+    text.includes('PROJECT MANAGEMENT') ||
+    text.includes('METHODOLOG') ||
+    text.includes('QUALITY ASSURANCE') ||
+    text.includes('GROUP PROJECT')
+  ) {
+    domains.push('SOFTWARE_ENG');
+  }
+
+  // Systems, Hardware, Electronics, Architecture
+  if (
+    mod.code?.toUpperCase().startsWith('COE') ||
+    text.includes('HARDWARE') ||
+    text.includes('ARCHITECTURE') ||
+    text.includes('ELECTRONIC') ||
+    text.includes('MICROPROCESSOR') ||
+    text.includes('INTERFACING') ||
+    text.includes('OPERATING SYSTEM') ||
+    text.includes('EMBEDDED') ||
+    text.includes('DIGITAL')
+  ) {
+    domains.push('SYSTEMS_HARDWARE');
+  }
+
+  // Networks, Telecom, Security
+  if (
+    text.includes('NETWORK') ||
+    text.includes('SECURITY') ||
+    text.includes('COMMUNICATION') ||
+    text.includes('WIRELESS') ||
+    text.includes('CLOUD') ||
+    text.includes('DISTRIBUTED') ||
+    text.includes('TELECOMMUNICATION')
+  ) {
+    domains.push('NETWORKS_SECURITY');
+  }
+
+  // Web & Database
+  if (
+    text.includes('WEB') ||
+    text.includes('DATABASE') ||
+    text.includes('DATA MANAGEMENT') ||
+    text.includes('SQL') ||
+    text.includes('MEDIA')
+  ) {
+    domains.push('WEB_DATABASE');
+  }
+
+  // Engineering Core
+  if (
+    text.includes('MECHANIC') ||
+    text.includes('FLUID') ||
+    text.includes('THERMO') ||
+    text.includes('STATICS') ||
+    text.includes('DYNAMICS') ||
+    text.includes('MATERIAL') ||
+    text.includes('STRUCTURE') ||
+    text.includes('CIVIL') ||
+    text.includes('ELECTRICAL')
+  ) {
+    domains.push('ENGINEERING_CORE');
+  }
+
+  return domains;
+};
+
+// Retrieves ALL matching related prerequisite subjects from ALL prior semesters (Sem 1, Sem 2, etc.)
+export const getAllPrerequisiteRecommendations = (targetModule, faculty, degree, currentYear, currentSemester) => {
+  if (!targetModule || !currentSemester) return [];
+
+  const normCurrYear = (currentYear || '').includes("1") ? "Year 1"
+    : (currentYear || '').includes("2") ? "Year 2"
+    : (currentYear || '').includes("3") ? "Year 3"
+    : (currentYear || '').includes("4") ? "Year 4"
+    : "Year 1";
+
+  const currentIndex = SEMESTER_CHRONO_ORDER.findIndex(
+    s => s.year === normCurrYear && s.sem.toLowerCase() === currentSemester.toLowerCase()
+  );
+
+  // If Semester I of Year 1, direct intake only
+  if (currentIndex <= 0) {
+    return [
+      {
+        code: "AL_ZSCORE",
+        name: "G.C.E. A/L Intake Z-Score",
+        semesterLabel: "Year 1 • Semester I",
+        reason: "Direct School Intake Baseline"
+      }
+    ];
+  }
+
+  // Collect ALL prior semester modules chronologically from Semester I up to current
+  const allPriorModules = [];
+  for (let i = 0; i < currentIndex; i++) {
+    const priorSem = SEMESTER_CHRONO_ORDER[i];
+    const mods = getCurriculumModules(faculty, degree, priorSem.year, priorSem.sem);
+    mods.forEach(m => {
+      allPriorModules.push({
+        ...m,
+        semIndex: i,
+        semesterLabel: priorSem.label
+      });
+    });
+  }
+
+  const targetDomains = getModuleAcademicDomains(targetModule);
+  const targetCode = (targetModule.code || '').toUpperCase();
+  const directPrereqCode = CURRICULUM_PREREQUISITES[targetCode]?.code?.toUpperCase();
+
+  const matched = [];
+
+  // Match prior modules across ALL prior semesters
+  allPriorModules.forEach(priorMod => {
+    const pCode = (priorMod.code || '').toUpperCase();
+    const pDomains = getModuleAcademicDomains(priorMod);
+
+    let isMatch = false;
+    let matchReason = "";
+
+    // A) Explicit direct prerequisite
+    if (directPrereqCode && pCode === directPrereqCode) {
+      isMatch = true;
+      matchReason = CURRICULUM_PREREQUISITES[targetCode]?.reason || "Direct foundational requirement";
+    }
+    // B) Domain-based academic matching across all prior semesters
+    else if (targetDomains.some(d => pDomains.includes(d))) {
+      isMatch = true;
+      if (targetDomains.includes('MATHEMATICS')) {
+        matchReason = "Foundational mathematics & analytical methods";
+      } else if (targetDomains.includes('PROGRAMMING')) {
+        matchReason = "Core programming, algorithms & logic";
+      } else if (targetDomains.includes('SOFTWARE_ENG')) {
+        matchReason = "Software development & modeling process";
+      } else if (targetDomains.includes('SYSTEMS_HARDWARE')) {
+        matchReason = "Hardware & computer systems architecture";
+      } else if (targetDomains.includes('NETWORKS_SECURITY')) {
+        matchReason = "Networking & communications baseline";
+      } else if (targetDomains.includes('WEB_DATABASE')) {
+        matchReason = "Data handling & software structures";
+      } else if (targetDomains.includes('ENGINEERING_CORE')) {
+        matchReason = "Foundational engineering principles";
+      } else {
+        matchReason = "Related prior semester subject";
+      }
+    }
+
+    if (isMatch && !matched.some(m => m.code === priorMod.code)) {
+      matched.push({
+        code: priorMod.code,
+        name: priorMod.name,
+        semesterLabel: priorMod.semesterLabel,
+        semIndex: priorMod.semIndex,
+        credits: priorMod.credits,
+        category: priorMod.category,
+        reason: matchReason
+      });
+    }
+  });
+
+  // Sort from most recent prior semester down to earliest prior semester (e.g. Sem 3, then Sem 2, then Sem 1)
+  matched.sort((a, b) => b.semIndex - a.semIndex);
+
+  // If no specific domain matches found, fallback to primary prerequisite or general foundation
+  if (matched.length === 0) {
+    const fallbackPrereq = getPrerequisiteRecommendation(targetModule.code);
+    if (fallbackPrereq) {
+      matched.push({
+        code: fallbackPrereq.code,
+        name: fallbackPrereq.name,
+        semesterLabel: "Foundational Prerequisite",
+        reason: fallbackPrereq.reason
+      });
+    }
+  }
+
+  return matched;
+};
+
+// Computes student's aggregate competency score across ALL matching related prerequisite modules from prior semesters
+export const getStudentAggregateScore = (student, relatedModules, baseTechScore = 75) => {
+  if (!student) return 75;
+  if (!relatedModules || relatedModules.length === 0) {
+    return student.technical_score || baseTechScore || 75;
+  }
+
+  // If 1st semester intake Z-score
+  if (relatedModules.length === 1 && relatedModules[0].code === 'AL_ZSCORE') {
+    return getStudentModuleScore(student, 'AL_ZSCORE', baseTechScore);
+  }
+
+  const foundMarks = [];
+  relatedModules.forEach(mod => {
+    if (student.module_scores && student.module_scores[mod.code] !== undefined) {
+      const val = parseFloat(student.module_scores[mod.code]);
+      if (!isNaN(val) && val > 0) {
+        foundMarks.push(val);
+      }
+    }
+  });
+
+  if (foundMarks.length > 0) {
+    // Average student competency across all completed matching subjects from prior semesters!
+    const avg = foundMarks.reduce((a, b) => a + b, 0) / foundMarks.length;
+    return Math.min(100, Math.max(30, Math.round(avg)));
+  }
+
+  // If student doesn't have explicit marks in these specific module codes yet,
+  // compute deterministic baseline using the primary related module
+  const primaryCode = relatedModules[0]?.code || 'CS11012';
+  return getStudentModuleScore(student, primaryCode, baseTechScore);
+};
