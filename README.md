@@ -19,18 +19,23 @@ An automated, intelligent student team optimization platform designed for **Gene
 ## ✨ Key Features
 
 - 🎨 **Modern Glassmorphic Dashboard**: Dark-themed UI with real-time student roster stats, avatar badges, and skill progress bars.
+- 📚 **KDU Curriculum & Module-Specific Profiling**:
+  - Full official syllabus integration for KDU Computing degrees (**Computer Science**, **Information Technology**, **Information Systems**, **Data Science & Business Analytics**).
+  - Evaluates student aptitude based on selected target modules and **cumulative prerequisite competency across all prior semesters**.
 - 📁 **Multi-Format Bulk Data Upload (Excel, CSV, PDF)**:
   - In-browser parsing for `.xlsx`, `.xls`, `.csv`, and `.pdf` files.
-  - Automatically extracts Student IDs, Full Names, Academic Years, and Scores using `pdfjs-dist` & `xlsx`.
-- 🎓 **Dynamic Z-Score & GPA Support**:
-  - **1st Year (1st Sem)**: Uses A/L Z-Score (0.0 - 3.5).
-  - **2nd, 3rd & 4th Year**: Uses University GPA (0.0 - 4.0).
-- 🛡️ **Duplicate Student ID Protection**: Automatic real-time validation and batch-import duplicate skipping to maintain clean data integrity.
+  - Full native support for the official **KDU Examination Results Marksheet Format** (`Marks Format.xlsx`).
+- 🎓 **Dynamic Z-Score & Direct Mark Evaluation**:
+  - **1st Year (1st Sem)**: Direct school intake evaluated via A/L Z-Score baseline.
+  - **Semesters 2 to 8**: Direct evaluation using subject marks (0 - 100%) and prerequisite cumulative performance.
+- 🎭 **Belbin Team Role Profiler**: Assigns operational roles (Team Coordinator, Technical Implementer, Innovator, Specialist, QA Lead) to ensure functional team balance.
+- 🔗 **CSP Constraint Satisfaction Engine**: Real-time enforcement of student pair Affinities (Must Pair) and Conflicts (Must Separate).
 - 🧠 **3-Stage Hybrid AI Architecture**:
-  - **Concept 1: Fuzzy Logic Profiler**: Standardizes disparate academic metrics (A/L Z-Scores and GPAs) into continuous competency scores.
+  - **Concept 1: Fuzzy Logic Profiler**: Standardizes disparate academic metrics into continuous competency scores.
   - **Concept 2: K-Means Clustering**: Partitions cohorts into $k=3$ stratified performance tiers (Developing, Proficient, Advanced) to eliminate homogeneous team seeding.
-  - **Concept 3: Genetic Algorithm Optimizer**: Performs combinatorial stochastic search with multi-objective fitness evaluation to balance skills while maximizing inter-disciplinary diversity.
-- 📄 **Dual Report Generation**: Instant export of formatted team allocation reports for academic administration in both **PDF** and **Excel (.xlsx)** formats.
+  - **Concept 3: Genetic Algorithm Optimizer**: Performs multi-objective optimization (2,500 iterations) balancing skill equity, role diversity, and constraint satisfaction.
+- ⚡ **Empirical Benchmarking Suite**: 4-model comparative verification (Random, Greedy Snake, Pure GA, and Hybrid K-Means + GA).
+- 📄 **Dual Report Generation**: Instant export of formatted team allocation reports in both **PDF** and **Excel (.xlsx)** formats.
 
 ---
 
@@ -117,9 +122,11 @@ Lecturers can upload an Excel/CSV file with the following column headers:
 
 ---
 
-## 👤 Author
+## 👥 Developers
 
-Developed by **[Achira Hathsidu](https://github.com/Achira810)**
+Developed by:
+- **[Achira Hathsidu](https://github.com/Achira810)**
+- **Lasath**
 
 ---
 
