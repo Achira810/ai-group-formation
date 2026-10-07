@@ -383,6 +383,334 @@ export const DEGREE_CURRICULUM = {
         { code: "CM4012", name: "Advanced Topics in Statistics", credits: "2 GPA", category: "ELECTIVE" }
       ]
     }
+  },
+
+  "BSc (Hons) Information Technology": {
+    "Year 1": {
+      "Semester I": [
+        { code: "IT1022", name: "Information Technology Concepts", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1033", name: "Fundamentals of Computer Programming", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1043", name: "Fundamentals of Computer Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1062", name: "Fundamentals of Visual Computing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1072", name: "Career Development Plan", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1023", name: "Mathematics for IT - I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DL1172", name: "English Study Skills for ICT", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1112", name: "Principles of Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LS1052", name: "Leadership Training", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "IT1083", name: "Computer Systems Architecture", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1093", name: "Object Oriented Programming", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1103", name: "System Analysis and Design", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1113", name: "Fundamentals of Database Management Skills", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1992", name: "Visual Computing Project (Group)", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1122", name: "Internet of Things (IoT)", credits: "2 NGPA", category: "COMPULSORY" },
+        { code: "CM1042", name: "Basic Probability and Statistics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL2192", name: "Presentation Skills for ICT", credits: "2 NGPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "IT2022", name: "Computer Network Systems I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2032", name: "Object Oriented Designing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2043", name: "Data and Information Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2053", name: "Rapid Application Development", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2063", name: "Software Engineering", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2072", name: "UX and UI Engineering", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2022", name: "Mathematics for IT II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL24202", name: "Writing and Speaking Skills", credits: "2 NGPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "IT2082", name: "Web Technologies", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2093", name: "Data Structures and Algorithms", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2103", name: "Computer Network Systems II", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2992", name: "Industry based Software Engineering Project", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2113", name: "Project Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2122", name: "Operating Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2132", name: "Research Methodology", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2032", name: "Statistical Distribution and Inference", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF2212", name: "Human Resource Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL29302", name: "Research Writing Skills", credits: "2 NGPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 3": {
+      "Semester V": [
+        { code: "IT3023", name: "Advanced Multimedia Technologies", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3033", name: "Information and Data Security", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3043", name: "Advanced Computer Network Systems I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3052", name: "Programming Frameworks", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3063", name: "Advanced Web Technologies", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3072", name: "Enterprise Resource Planning Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3082", name: "Computer Ethics and IT Law", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3093", name: "Mobile Computing", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester VI": [
+        { code: "IT3103", name: "Service Oriented Web Programming", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3113", name: "Cyber Security", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3123", name: "Cloud Computing and Virtualization", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3133", name: "Programming Distributed Components", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3143", name: "Independent Study", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3153", name: "Software Quality Assurance", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3162", name: "GIS and Remote Sensing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3182", name: "Essentials of Artificial Intelligence", credits: "2 GPA", category: "ELECTIVE" }
+      ]
+    },
+    "Year 4": {
+      "Semester VII": [
+        { code: "IT4012", name: "Emerging Trends in IT", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT4999", name: "Individual Research Project", credits: "6 GPA", category: "COMPULSORY" },
+        { code: "IT4022", name: "Advanced Cloud Architecture", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "IT4032", name: "DevOps & Continuous Integration", credits: "2 GPA", category: "ELECTIVE" }
+      ]
+    }
+  },
+
+  "BSc (Hons) Information Systems": {
+    "Year 1": {
+      "Semester I": [
+        { code: "IT1022", name: "Information Technology Concepts", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1033", name: "Fundamentals of Computer Programming", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1043", name: "Fundamentals of Computer Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1062", name: "Fundamentals of Visual Computing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1072", name: "Career Development Plan", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1023", name: "Mathematics for IT - I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DL1172", name: "English Study Skills for ICT", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1112", name: "Principles of Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LS1052", name: "Leadership Training", credits: "2 GPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "IT1083", name: "Computer Systems Architecture", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1093", name: "Object Oriented Programming", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1103", name: "System Analysis and Design", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1113", name: "Fundamentals of Database Management Skills", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT1992", name: "Visual Computing Project (Group)", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT1122", name: "Internet of Things (IoT)", credits: "2 NGPA", category: "COMPULSORY" },
+        { code: "CM1042", name: "Basic Probability and Statistics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL2192", name: "Presentation Skills for ICT", credits: "2 NGPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "IT2022", name: "Computer Network Systems I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2032", name: "Object Oriented Designing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2043", name: "Data and Information Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2053", name: "Rapid Application Development", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2063", name: "Software Engineering", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2072", name: "UX and UI Engineering", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2022", name: "Mathematics for IT II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL24202", name: "Writing and Speaking Skills", credits: "2 NGPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "IT2082", name: "Web Technologies", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2093", name: "Data Structures and Algorithms", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2103", name: "Computer Network Systems II", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2992", name: "Industry based Software Engineering Project", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2113", name: "Project Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT2122", name: "Operating Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT2132", name: "Research Methodology", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2032", name: "Statistical Distribution and Inference", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF2212", name: "Human Resource Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DL29302", name: "Research Writing Skills", credits: "2 NGPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 3": {
+      "Semester V": [
+        { code: "IS3022", name: "Accounting Principles and Costing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IS3042", name: "Principles of Economics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IS3053", name: "Strategic Management", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3082", name: "Computer Ethics and IT Law", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IS3062", name: "Knowledge Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3063", name: "Advanced Web Technologies", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3072", name: "Enterprise Resource Planning Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM3013", name: "Operational Research", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester VI": [
+        { code: "IS3073", name: "Management Information Systems", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IS3112", name: "Marketing Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IS3083", name: "E-Commerce", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IS3093", name: "Financial Management Concepts", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3143", name: "Independent Study", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IS3102", name: "Organizational Behaviour", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3153", name: "Software Quality Assurance", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "IT3162", name: "GIS and Remote Sensing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IT3182", name: "Essentials of Artificial Intelligence", credits: "2 GPA", category: "ELECTIVE" }
+      ]
+    },
+    "Year 4": {
+      "Semester VII": [
+        { code: "IS4012", name: "Business Process Management & Reengineering", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "IS4999", name: "Individual Research Project in Information Systems", credits: "6 GPA", category: "COMPULSORY" },
+        { code: "IS4022", name: "Enterprise Architecture & IT Governance", credits: "2 GPA", category: "ELECTIVE" }
+      ]
+    }
+  },
+
+  "BSc (Hons) Data Science": {
+    "Year 1": {
+      "Semester I": [
+        { code: "CS1122", name: "Fundamentals of Data Science", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1072", name: "Linear Algebra I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1063", name: "Calculus I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS1012", name: "Fundamentals of Programming", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS1101", name: "Programming Laboratory", credits: "1 GPA", category: "COMPULSORY" },
+        { code: "MF1122", name: "Principles of Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1131", name: "Analysis of Business Environment", credits: "1 GPA", category: "COMPULSORY" },
+        { code: "LC1133", name: "Introduction to Communication Skills", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MS1013", name: "Military Studies", credits: "4 MGPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "DS12013", name: "Discrete Mathematics for Data Science", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DS12022", name: "Linear Algebra I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS12033", name: "Statistical Inference", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS12052", name: "Object Oriented Programming", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS12042", name: "Applied Statistical Computing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1212", name: "Business Economics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LC1243", name: "Fundamentals of Business Communication", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MS1024", name: "Military Studies", credits: "Non-GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "CM2042", name: "Calculus II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2052", name: "Linear Algebra II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2062", name: "Statistical Computing with R", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2073", name: "Statistical Inference", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS2093", name: "Data Structures and Algorithms", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF2123", name: "Accounting and Finance", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LC2353", name: "Advanced Communication Skills", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "CM2083", name: "Regression Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS2122", name: "Introduction to Artificial Intelligence", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS2112", name: "Business Analytical Techniques", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS2103", name: "Software Engineering", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF2222", name: "Cost & Management Accounting", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF2233", name: "Financial Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LC2463", name: "Conversation Analysis", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 3": {
+      "Semester V": [
+        { code: "CS3212", name: "Advanced Database Management Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS3223", name: "Data Mining and Data Warehousing", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS3273", name: "Introduction to Machine Learning", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS3242", name: "Computer Networks", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS3013", name: "Research Methodology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3113", name: "Operations Research", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3122", name: "Marketing for Analytics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS3993", name: "Group Project in Data Science", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester VI": [
+        { code: "CS3253", name: "Big Data Analytics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CM3023", name: "Financial Time Series Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DS3993", name: "Group Project in Data Science", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CM3032", name: "Bayesian Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CM3042", name: "Categorical Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CM3052", name: "Multivariate Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS3263", name: "Professional Practices and IT Law", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3212", name: "Operation Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LC3673", name: "Discourse Communication", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 4": {
+      "Semester VII": [
+        { code: "CS41172", name: "Image Processing and Computer Vision", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS41012", name: "Data Management and Governance", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "SE41052", name: "Project Management for Data Science", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS41142", name: "Natural Language Processing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS41052", name: "Semantic Web and Ontology", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "DS41022", name: "Spatial Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "DS41032", name: "Emerging Trends in Data Science", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS41182", name: "Parallel Computing", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS41152", name: "Information Security", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "MF4122", name: "Strategic Business Analysis", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS42999", name: "Individual Research Project (Carried throughout Sem 7 & Sem 8)", credits: "Major Project", category: "COMPULSORY" }
+      ]
+    }
+  },
+
+  "BSc (Hons) in Data Science & Business Analytics": {
+    "Year 1": {
+      "Semester I": [
+        { code: "CS1122", name: "Fundamentals of Data Science", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1072", name: "Linear Algebra I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM1063", name: "Calculus I", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS1012", name: "Fundamentals of Programming", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS1101", name: "Programming Laboratory", credits: "1 GPA", category: "COMPULSORY" },
+        { code: "MF1122", name: "Principles of Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1131", name: "Analysis of Business Environment", credits: "1 GPA", category: "COMPULSORY" },
+        { code: "LC1133", name: "Introduction to Communication Skills", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MS1013", name: "Military Studies", credits: "4 MGPA", category: "COMPULSORY" }
+      ],
+      "Semester II": [
+        { code: "DS12013", name: "Discrete Mathematics for Data Science", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DS12022", name: "Linear Algebra I", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS12033", name: "Statistical Inference", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS12052", name: "Object Oriented Programming", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS12042", name: "Applied Statistical Computing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF1212", name: "Business Economics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LC1243", name: "Fundamentals of Business Communication", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MS1024", name: "Military Studies", credits: "Non-GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 2": {
+      "Semester III": [
+        { code: "CM2042", name: "Calculus II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2052", name: "Linear Algebra II", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2062", name: "Statistical Computing with R", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CM2073", name: "Statistical Inference", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS2093", name: "Data Structures and Algorithms", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF2123", name: "Accounting and Finance", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LC2353", name: "Advanced Communication Skills", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester IV": [
+        { code: "CM2083", name: "Regression Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS2122", name: "Introduction to Artificial Intelligence", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS2112", name: "Business Analytical Techniques", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS2103", name: "Software Engineering", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF2222", name: "Cost & Management Accounting", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "MF2233", name: "Financial Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "LC2463", name: "Conversation Analysis", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 3": {
+      "Semester V": [
+        { code: "CS3212", name: "Advanced Database Management Systems", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS3223", name: "Data Mining and Data Warehousing", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS3273", name: "Introduction to Machine Learning", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CS3242", name: "Computer Networks", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS3013", name: "Research Methodology", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3113", name: "Operations Research", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3122", name: "Marketing for Analytics", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS3993", name: "Group Project in Data Science", credits: "3 GPA", category: "COMPULSORY" }
+      ],
+      "Semester VI": [
+        { code: "CS3253", name: "Big Data Analytics", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CM3023", name: "Financial Time Series Analysis", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "DS3993", name: "Group Project in Data Science", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "CM3032", name: "Bayesian Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CM3042", name: "Categorical Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CM3052", name: "Multivariate Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS3263", name: "Professional Practices and IT Law", credits: "3 GPA", category: "COMPULSORY" },
+        { code: "MF3212", name: "Operation Management", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "LC3673", name: "Discourse Communication", credits: "3 GPA", category: "COMPULSORY" }
+      ]
+    },
+    "Year 4": {
+      "Semester VII": [
+        { code: "CS41172", name: "Image Processing and Computer Vision", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS41012", name: "Data Management and Governance", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "SE41052", name: "Project Management for Data Science", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS41142", name: "Natural Language Processing", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "CS41052", name: "Semantic Web and Ontology", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "DS41022", name: "Spatial Data Analysis", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "DS41032", name: "Emerging Trends in Data Science", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS41182", name: "Parallel Computing", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "CS41152", name: "Information Security", credits: "2 GPA", category: "ELECTIVE" },
+        { code: "MF4122", name: "Strategic Business Analysis", credits: "2 GPA", category: "COMPULSORY" },
+        { code: "DS42999", name: "Individual Research Project (Carried throughout Sem 7 & Sem 8)", credits: "Major Project", category: "COMPULSORY" }
+      ]
+    }
   }
 };
 
@@ -549,9 +877,19 @@ export const getCurriculumModules = (faculty, degree, year, semester) => {
     : "Year 1";
 
   // 1. Direct match by degree name in DEGREE_CURRICULUM
-  const normDegree = Object.keys(DEGREE_CURRICULUM).find(
-    (d) => degree?.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(degree?.toLowerCase())
-  );
+  const degLower = (degree || '').toLowerCase();
+  const normDegree = Object.keys(DEGREE_CURRICULUM).find((d) => {
+    const dLower = d.toLowerCase();
+    if (degLower === dLower) return true;
+    if (degLower.includes(dLower) || dLower.includes(degLower)) return true;
+    if ((degLower.includes('data science') || degLower.includes('dba') || degLower.includes('business analytics')) &&
+        (dLower.includes('data science') || dLower.includes('dba'))) return true;
+    if ((degLower.includes('information technology') || degLower === 'it' || degLower.includes('it stream')) &&
+        dLower.includes('information technology')) return true;
+    if ((degLower.includes('information systems') || degLower === 'is' || degLower.includes('is stream')) &&
+        dLower.includes('information systems')) return true;
+    return false;
+  });
 
   if (normDegree && DEGREE_CURRICULUM[normDegree]?.[normYear]?.[semester]) {
     return DEGREE_CURRICULUM[normDegree][normYear][semester];
@@ -644,7 +982,122 @@ export const CURRICULUM_PREREQUISITES = {
   "SE4022": { code: "SE22022", name: "Software Architecture", reason: "Software evolution and maintenance" },
   "SE4042": { code: "SE32012", name: "Software Verification and Validation", reason: "Quality assurance & testing" },
   "CS4999": { code: "CS31022", name: "Research Methodology", reason: "Final individual research project" },
-  "SE4999": { code: "SE32992", name: "Independent Research Study", reason: "Final SE research project" }
+  "SE4999": { code: "SE32992", name: "Independent Research Study", reason: "Final SE research project" },
+
+  // IT & IS Stream Prerequisite Mappings
+  "IT1083": { code: "IT1043", name: "Fundamentals of Computer Systems", reason: "Hardware & architecture baseline" },
+  "IT1093": { code: "IT1033", name: "Fundamentals of Computer Programming", reason: "Programming concepts for OOP" },
+  "IT1103": { code: "IT1022", name: "Information Technology Concepts", reason: "IT concepts baseline for systems analysis" },
+  "IT1113": { code: "IT1033", name: "Fundamentals of Computer Programming", reason: "Data storage & logic baseline" },
+  "IT1992": { code: "IT1062", name: "Fundamentals of Visual Computing", reason: "Visual computing project foundation" },
+  "IT1122": { code: "IT1043", name: "Fundamentals of Computer Systems", reason: "Systems & embedded IoT foundation" },
+  "CM1042": { code: "CM1023", name: "Mathematics for IT - I", reason: "Foundational mathematics for statistics" },
+  "DL2192": { code: "DL1172", name: "English Study Skills for ICT", reason: "Communication & study skills baseline" },
+
+  "IT2022": { code: "IT1083", name: "Computer Systems Architecture", reason: "Systems architecture for networking" },
+  "IT2032": { code: "IT1093", name: "Object Oriented Programming", reason: "OOP mastery for design patterns" },
+  "IT2043": { code: "IT1113", name: "Fundamentals of Database Management Skills", reason: "Database skills for data management" },
+  "IT2053": { code: "IT1093", name: "Object Oriented Programming", reason: "OOP logic for rapid application dev" },
+  "IT2063": { code: "IT1103", name: "System Analysis and Design", reason: "Analysis & modeling for software engineering" },
+  "IT2072": { code: "IT1062", name: "Fundamentals of Visual Computing", reason: "Visual design for UI/UX engineering" },
+  "CM2022": { code: "CM1023", name: "Mathematics for IT - I", reason: "Discrete & computational mathematics" },
+  "DL24202": { code: "DL2192", name: "Presentation Skills for ICT", reason: "Presentation skills for professional speaking" },
+
+  "IT2082": { code: "IT2053", name: "Rapid Application Development", reason: "Web application development baseline" },
+  "IT2093": { code: "IT1093", name: "Object Oriented Programming", reason: "OOP for data structures & algorithms" },
+  "IT2103": { code: "IT2022", name: "Computer Network Systems I", reason: "Foundational networking for Network Systems II" },
+  "IT2992": { code: "IT2063", name: "Software Engineering", reason: "Software engineering baseline for industry project" },
+  "IT2113": { code: "IT2063", name: "Software Engineering", reason: "Software process & project management" },
+  "IT2122": { code: "IT1083", name: "Computer Systems Architecture", reason: "Computer architecture for operating systems" },
+  "IT2132": { code: "CM1042", name: "Basic Probability and Statistics", reason: "Statistical foundations for research methodology" },
+  "CM2032": { code: "CM1042", name: "Basic Probability and Statistics", reason: "Probability baseline for statistical inference" },
+  "MF2212": { code: "MF1112", name: "Principles of Management", reason: "General management for human resources" },
+  "DL29302": { code: "DL24202", name: "Writing and Speaking Skills", reason: "Writing skills for research papers" },
+
+  "IT3023": { code: "IT1062", name: "Fundamentals of Visual Computing", reason: "Visual computing for advanced multimedia" },
+  "IT3033": { code: "IT2103", name: "Computer Network Systems II", reason: "Network infrastructure for information security" },
+  "IT3043": { code: "IT2103", name: "Computer Network Systems II", reason: "Advanced network architecture baseline" },
+  "IT3052": { code: "IT2053", name: "Rapid Application Development", reason: "Development frameworks & libraries" },
+  "IT3063": { code: "IT2082", name: "Web Technologies", reason: "Web standards for advanced web technologies" },
+  "IT3072": { code: "IT2043", name: "Data and Information Management", reason: "Enterprise data architecture for ERP" },
+  "IT3082": { code: "MF1112", name: "Principles of Management", reason: "Managerial context for IT law & ethics" },
+  "IT3093": { code: "IT2053", name: "Rapid Application Development", reason: "Application development for mobile platforms" },
+
+  "IS3022": { code: "MF1112", name: "Principles of Management", reason: "Management foundation for costing" },
+  "IS3042": { code: "MF1112", name: "Principles of Management", reason: "Economic analysis in management" },
+  "IS3053": { code: "MF1112", name: "Principles of Management", reason: "Strategic leadership & business management" },
+  "IS3062": { code: "IT2043", name: "Data and Information Management", reason: "Information assets for knowledge management" },
+  "CM3013": { code: "CM2032", name: "Statistical Distribution and Inference", reason: "Quantitative methods for operational research" },
+
+  "IT3103": { code: "IT3063", name: "Advanced Web Technologies", reason: "Web services & SOA architecture" },
+  "IT3113": { code: "IT3033", name: "Information and Data Security", reason: "Security concepts for cybersecurity" },
+  "IT3123": { code: "IT3043", name: "Advanced Computer Network Systems I", reason: "Networking baseline for virtualization & cloud" },
+  "IT3133": { code: "IT2093", name: "Data Structures and Algorithms", reason: "Algorithms for distributed systems" },
+  "IT3143": { code: "IT2132", name: "Research Methodology", reason: "Research methodology for independent study" },
+  "IT3153": { code: "IT2063", name: "Software Engineering", reason: "Software process for quality assurance" },
+  "IT3162": { code: "IT2043", name: "Data and Information Management", reason: "Spatial data management for GIS" },
+  "IT3182": { code: "IT2093", name: "Data Structures and Algorithms", reason: "Algorithmic thinking for AI" },
+
+  "IS3073": { code: "IT2043", name: "Data and Information Management", reason: "Information systems & database baseline" },
+  "IS3112": { code: "MF1112", name: "Principles of Management", reason: "Management principles for marketing" },
+  "IS3083": { code: "IT2082", name: "Web Technologies", reason: "Web platforms for e-commerce" },
+  "IS3093": { code: "IS3022", name: "Accounting Principles and Costing", reason: "Financial accounting principles" },
+  "IS3102": { code: "MF1112", name: "Principles of Management", reason: "Organizational behavior & dynamics" },
+
+  // Data Science & Business Analytics (DBA) Prerequisite Mappings
+  "DS12013": { code: "CM1072", name: "Linear Algebra I", reason: "Mathematical foundations for discrete structures" },
+  "DS12022": { code: "CM1072", name: "Linear Algebra I", reason: "Vector spaces & matrix operations" },
+  "DS12033": { code: "CM1063", name: "Calculus I", reason: "Continuous probability distributions" },
+  "CS12052": { code: "CS1012", name: "Fundamentals of Programming", reason: "Programming syntax for OOP" },
+  "DS12042": { code: "CS1012", name: "Fundamentals of Programming", reason: "Programming for statistical computing" },
+  "MF1212": { code: "MF1122", name: "Principles of Management", reason: "Managerial economics foundation" },
+  "LC1243": { code: "LC1133", name: "Introduction to Communication Skills", reason: "Communication skills for business" },
+
+  "CM2042": { code: "CM1063", name: "Calculus I", reason: "Single variable calculus for multivariable calculus" },
+  "CM2052": { code: "DS12022", name: "Linear Algebra I", reason: "Advanced linear algebra & eigenvalues" },
+  "CM2062": { code: "DS12042", name: "Applied Statistical Computing", reason: "Statistical scripting in R" },
+  "CM2073": { code: "DS12033", name: "Statistical Inference", reason: "Parametric & hypothesis testing" },
+  "CS2093": { code: "CS12052", name: "Object Oriented Programming", reason: "OOP foundation for data structures" },
+  "MF2123": { code: "MF1122", name: "Principles of Management", reason: "Managerial finance & accounting" },
+  "LC2353": { code: "LC1243", name: "Fundamentals of Business Communication", reason: "Professional business communication" },
+
+  "CM2083": { code: "CM2073", name: "Statistical Inference", reason: "Hypothesis testing for regression models" },
+  "CS2122": { code: "CS2093", name: "Data Structures and Algorithms", reason: "Search algorithms & heuristic structures" },
+  "CS2112": { code: "CM2062", name: "Statistical Computing with R", reason: "Statistical packages for business analytics" },
+  "CS2103": { code: "CS12052", name: "Object Oriented Programming", reason: "OOP & software lifecycle" },
+  "MF2222": { code: "MF2123", name: "Accounting and Finance", reason: "Accounting principles for cost management" },
+  "MF2233": { code: "MF2123", name: "Accounting and Finance", reason: "Financial statements & corporate analysis" },
+  "LC2463": { code: "LC2353", name: "Advanced Communication Skills", reason: "Discourse & conversation linguistics" },
+
+  "CS3212": { code: "CS12052", name: "Object Oriented Programming", reason: "Database storage & relational models" },
+  "CS3223": { code: "CS2112", name: "Business Analytical Techniques", reason: "Analytical modeling for data warehousing" },
+  "CS3273": { code: "CS2122", name: "Introduction to Artificial Intelligence", reason: "AI foundation for machine learning" },
+  "CS3242": { code: "CS1012", name: "Fundamentals of Programming", reason: "Network programming & distributed protocols" },
+  "DS3013": { code: "CM2083", name: "Regression Analysis", reason: "Empirical research methodology" },
+  "MF3113": { code: "CM2083", name: "Regression Analysis", reason: "Mathematical optimization in operations" },
+  "MF3122": { code: "CS2112", name: "Business Analytical Techniques", reason: "Customer segmentation & analytics" },
+  "DS3993": { code: "CS2103", name: "Software Engineering", reason: "Collaborative data science group project" },
+
+  "CS3253": { code: "CS3223", name: "Data Mining and Data Warehousing", reason: "Distributed data storage for big data" },
+  "CM3023": { code: "CM2083", name: "Regression Analysis", reason: "Time series forecasting & regression" },
+  "CM3032": { code: "CM2073", name: "Statistical Inference", reason: "Bayesian prior distributions" },
+  "CM3042": { code: "CM2073", name: "Statistical Inference", reason: "Contingency tables & categorical data" },
+  "CM3052": { code: "CM2052", name: "Linear Algebra II", reason: "Multivariate matrix operations & PCA" },
+  "CS3263": { code: "MF1122", name: "Principles of Management", reason: "Ethics & IT jurisprudence" },
+  "MF3212": { code: "MF3113", name: "Operations Research", reason: "Production scheduling & operations" },
+  "LC3673": { code: "LC2463", name: "Conversation Analysis", reason: "Discourse & rhetorical communication" },
+
+  "CS41172": { code: "CS3273", name: "Introduction to Machine Learning", reason: "Convolutional filters & vision models" },
+  "DS41012": { code: "CS3212", name: "Advanced Database Management Systems", reason: "Data stewardship & governance" },
+  "SE41052": { code: "DS3993", name: "Group Project in Data Science", reason: "Agile analytics & project delivery" },
+  "CS41142": { code: "CS3273", name: "Introduction to Machine Learning", reason: "Language tokenization & embeddings" },
+  "CS41052": { code: "CS3212", name: "Advanced Database Management Systems", reason: "Knowledge graphs & RDF" },
+  "DS41022": { code: "CM2083", name: "Regression Analysis", reason: "Geostatistical models & spatial GIS" },
+  "DS41032": { code: "CS3253", name: "Big Data Analytics", reason: "Current frontiers in data science" },
+  "CS41182": { code: "CS3242", name: "Computer Networks", reason: "Multi-threaded & cluster computing" },
+  "CS41152": { code: "CS3242", name: "Computer Networks", reason: "Data security & cryptographic protection" },
+  "MF4122": { code: "MF3122", name: "Marketing for Analytics", reason: "Competitive intelligence & business strategy" },
+  "DS42999": { code: "DS3013", name: "Research Methodology", reason: "Final individual data science thesis" }
 };
 
 // Retrieve intelligent prerequisite recommendation for a given target module
@@ -656,11 +1109,14 @@ export const getPrerequisiteRecommendation = (targetModuleCode) => {
 
   // Dynamic heuristics based on subject name or code
   const upper = targetModuleCode.toUpperCase();
-  if (upper.startsWith("CS11") || upper.startsWith("COE11") || upper.startsWith("CM11") || upper.startsWith("SE11")) {
+  if (upper.startsWith("CS11") || upper.startsWith("COE11") || upper.startsWith("CM11") || upper.startsWith("SE11") || upper.startsWith("IT10") || upper.startsWith("CS10")) {
     return { code: "AL_ZSCORE", name: "A/L Z-Score & School Aptitude Intake", reason: "Direct school intake foundation" };
   }
-  if (upper.startsWith("DL") || upper.includes("ENGLISH") || upper.includes("WRITING") || upper.includes("SPEAKING")) {
-    return { code: "DL1132", name: "English: Basic Study Skills for CS/SE/CE", reason: "Foundational academic English communication" };
+  if (upper.startsWith("LC") || upper.startsWith("DL") || upper.includes("ENGLISH") || upper.includes("WRITING") || upper.includes("COMMUNICATION")) {
+    return { code: "DL1172", name: "English Study Skills for ICT", reason: "Foundational academic communication" };
+  }
+  if (upper.startsWith("DS") || upper.includes("DATA SCIENCE")) {
+    return { code: "CS1122", name: "Fundamentals of Data Science", reason: "Data science concepts baseline" };
   }
   if (upper.startsWith("MF") || upper.startsWith("LS") || upper.startsWith("MS") || upper.includes("MANAGEMENT") || upper.includes("LEADER")) {
     return { code: "LS1052", name: "Leadership Training", reason: "Organizational & leadership baseline" };
@@ -676,6 +1132,9 @@ export const getPrerequisiteRecommendation = (targetModuleCode) => {
   }
   if (upper.includes("WEB") || upper.includes("DATABASE") || upper.includes("SQL")) {
     return { code: "CS11042", name: "Fundamentals of Databases (incl. Practical)", reason: "Data storage & information systems" };
+  }
+  if (upper.startsWith("IT")) {
+    return { code: "IT1033", name: "Fundamentals of Computer Programming", reason: "Programming & computational logic" };
   }
   return { code: "CS11012", name: "Fundamentals of Programming", reason: "Core computing & logic foundation" };
 };
@@ -794,11 +1253,16 @@ export const getModuleAcademicDomains = (mod) => {
   // 1. English, Writing, Linguistics & Professional Communication
   if (
     code.startsWith('DL') ||
+    code.startsWith('LC') ||
     text.includes('ENGLISH') ||
     text.includes('WRITING') ||
     text.includes('SPEAKING') ||
     text.includes('STUDY SKILLS') ||
     text.includes('COMMUNICATION SKILLS') ||
+    text.includes('BUSINESS COMMUNICATION') ||
+    text.includes('DISCOURSE COMMUNICATION') ||
+    text.includes('CONVERSATION ANALYSIS') ||
+    text.includes('PRESENTATION SKILLS') ||
     text.includes('LANGUAGE') ||
     text.includes('LITERATURE')
   ) {
@@ -815,9 +1279,22 @@ export const getModuleAcademicDomains = (mod) => {
     text.includes('MANAGEMENT') ||
     text.includes('LEADERSHIP') ||
     text.includes('DEFENCE STUDIES') ||
+    text.includes('MILITARY STUDIES') ||
     text.includes('DEFENSE') ||
     text.includes('COMPUTER LAW') ||
+    text.includes('IT LAW') ||
     text.includes('ENGINEERING ECONOMICS') ||
+    text.includes('BUSINESS ECONOMICS') ||
+    text.includes('ACCOUNTING') ||
+    text.includes('FINANCIAL') ||
+    text.includes('HUMAN RESOURCE') ||
+    text.includes('BUSINESS ENVIRONMENT') ||
+    text.includes('ORGANIZATIONAL BEHAVIOUR') ||
+    text.includes('MARKETING') ||
+    text.includes('OPERATIONS RESEARCH') ||
+    text.includes('OPERATION MANAGEMENT') ||
+    text.includes('BUSINESS ANALYSIS') ||
+    text.includes('E-COMMERCE') ||
     text.includes('LAW')
   ) {
     domains.push('MANAGEMENT_LEADERSHIP');
@@ -829,7 +1306,8 @@ export const getModuleAcademicDomains = (mod) => {
     text.includes('RESEARCH STUDY') ||
     text.includes('RESEARCH PROJECT') ||
     text.includes('RESEARCH WRITING') ||
-    text.includes('INDEPENDENT RESEARCH')
+    text.includes('INDEPENDENT RESEARCH') ||
+    text.includes('INDIVIDUAL RESEARCH')
   ) {
     domains.push('RESEARCH_SKILLS');
   }
@@ -837,6 +1315,9 @@ export const getModuleAcademicDomains = (mod) => {
   // 4. Mathematics & Statistics
   if (
     code.startsWith('CM') ||
+    code.startsWith('DS1201') ||
+    code.startsWith('DS1202') ||
+    code.startsWith('DS1203') ||
     text.includes('MATH') ||
     text.includes('CALCULUS') ||
     text.includes('STATISTIC') ||
@@ -844,7 +1325,10 @@ export const getModuleAcademicDomains = (mod) => {
     text.includes('DISCRETE') ||
     text.includes('NUMERICAL') ||
     text.includes('ALGEBRA') ||
-    text.includes('GEOMETRY')
+    text.includes('GEOMETRY') ||
+    text.includes('REGRESSION') ||
+    text.includes('TIME SERIES') ||
+    text.includes('INFERENCE')
   ) {
     domains.push('MATHEMATICS');
   }
