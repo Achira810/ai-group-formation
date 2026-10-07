@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { runFullBenchmarkSuite } from '../ai/benchmarking';
+import { runBenchmarkAI } from '../services/aiBackendService';
 import { supabase } from '../services/supabaseClient';
 
 export const BenchmarkingModal = ({ isOpen, onClose, students = [], numTeams = 4, weights, constraints }) => {
@@ -39,7 +39,7 @@ export const BenchmarkingModal = ({ isOpen, onClose, students = [], numTeams = 4
     }
   }, [activeTab]);
 
-  const handleRunBenchmark = () => {
+  const handleRunBenchmark = async () => {
     if (students.length === 0) {
       alert("Please load students into the system before running benchmarks.");
       return;
@@ -47,17 +47,20 @@ export const BenchmarkingModal = ({ isOpen, onClose, students = [], numTeams = 4
 
     setIsRunning(true);
     setSaveStatus('');
-    setTimeout(() => {
-      try {
-        const results = runFullBenchmarkSuite(students, Math.max(2, numTeams), weights, constraints);
-        setBenchmarkResults(results);
-      } catch (err) {
-        console.error("Benchmarking error:", err);
-        alert("Failed to complete benchmark: " + err.message);
-      } finally {
-        setIsRunning(false);
-      }
-    }, 300);
+    try {
+      const response = await runBenchmarkAI({
+        students,
+        numTeams: Math.max(2, numTeams),
+        weights,
+        constraints
+      });
+      setBenchmarkResults(response.results);
+    } catch (err) {
+      console.error("Benchmarking error:", err);
+      alert("Failed to complete benchmark: " + err.message);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   const handleSaveToSupabase = async () => {

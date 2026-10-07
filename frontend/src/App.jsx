@@ -7,9 +7,8 @@ import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import DOMPurify from 'dompurify';
-import { runKMeans, stratifyByKMeans } from './ai/kmeans';
 import { calculateTeamSynergy, BELBIN_ROLES, getActiveRoles, getRoleIcon } from './ai/xai';
-import { evaluateFitness } from './ai/benchmarking';
+import { optimizeTeamsAI, checkBackendHealth, runKMeansAI } from './services/aiBackendService';
 import { RadarChart } from './components/RadarChart';
 import { BenchmarkingModal } from './components/BenchmarkingModal';
 import { ConstraintsModal } from './components/ConstraintsModal';
@@ -90,6 +89,21 @@ function App() {
   const [clusterStats, setClusterStats] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [backendStatus, setBackendStatus] = useState({ online: false, checking: true });
+
+  useEffect(() => {
+    let isMounted = true;
+    const check = async () => {
+      const res = await checkBackendHealth();
+      if (isMounted) setBackendStatus({ ...res, checking: false });
+    };
+    check();
+    const timer = setInterval(check, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   const [previewStudents, setPreviewStudents] = useState([]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -321,44 +335,20 @@ function App() {
       const freshStudents = await fetchStudents();
       setConstraints(initialConstraints);
 
-      // Automatically form 3 balanced teams
+      // Automatically form 3 balanced teams via AI Engine
       const numTeams = 3;
-      const kResult = runKMeans(freshStudents, 3);
-      setClusterStats(kResult.clusterStats);
-
-      let currentGroups = stratifyByKMeans(freshStudents, numTeams, 3);
-      let bestGroups = currentGroups.map(g => [...g]);
-      let bestFitness = evaluateFitness(bestGroups, gaWeights, initialConstraints);
-
-      for (let iter = 0; iter < 1500; iter++) {
-        let testGroups = bestGroups.map(g => [...g]);
-        let g1 = Math.floor(Math.random() * numTeams);
-        let g2 = Math.floor(Math.random() * numTeams);
-        if (g1 === g2) continue;
-        if (testGroups[g1].length === 0 || testGroups[g2].length === 0) continue;
-
-        let s1Idx = Math.floor(Math.random() * testGroups[g1].length);
-        let s2Idx = Math.floor(Math.random() * testGroups[g2].length);
-
-        let temp = testGroups[g1][s1Idx];
-        testGroups[g1][s1Idx] = testGroups[g2][s2Idx];
-        testGroups[g2][s2Idx] = temp;
-
-        let newFitness = evaluateFitness(testGroups, gaWeights, initialConstraints);
-
-        if (newFitness < bestFitness) {
-          bestGroups = testGroups;
-          bestFitness = newFitness;
-        }
-      }
-
-      const cohortMean = freshStudents.reduce((tot, s) => tot + (s.technical_score || 0), 0) / freshStudents.length;
-      bestGroups.forEach(g => {
-        g.synergy = calculateTeamSynergy(g, cohortMean);
+      const optResult = await optimizeTeamsAI({
+        students: freshStudents,
+        numTeams,
+        iterations: 1500,
+        weights: gaWeights,
+        constraints: initialConstraints,
+        activeModule: ''
       });
 
-      setGroups(bestGroups);
-      saveGroupsToDatabase(bestGroups);
+      setClusterStats(optResult.clusterStats);
+      setGroups(optResult.groups);
+      saveGroupsToDatabase(optResult.groups);
 
       setDeltaNotification({
         type: 'success',
@@ -776,8 +766,8 @@ function App() {
           g.synergy = calculateTeamSynergy(g, cohortMean);
         });
         setGroups(reconstructed);
-        const kResult = runKMeans(currentStudents, 3);
-        setClusterStats(kResult.clusterStats);
+        const kResult = await runKMeansAI(currentStudents, 3);
+        setClusterStats(kResult.clusterStats || []);
       }
     } catch (err) {
       console.error("Error restoring saved groups:", err);
@@ -1201,7 +1191,7 @@ function App() {
 
     setIsOptimizing(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const targetVal = parseInt(allocationValue, 10);
       if (isNaN(targetVal) || targetVal <= 0) {
         alert("Please enter a valid number for allocation.");
@@ -1222,51 +1212,33 @@ function App() {
         return;
       }
 
-      // AI Concept 2: K-Means Clustering Tier Stratification (k=3)
-      const kResult = runKMeans(effectiveStudents, 3);
-      setClusterStats(kResult.clusterStats);
+      try {
+        const result = await optimizeTeamsAI({
+          students: effectiveStudents,
+          numTeams,
+          iterations: 2500,
+          weights: gaWeights,
+          constraints,
+          activeModule
+        });
 
-      // Seed initial population using K-Means stratified sampling across performance tiers
-      let currentGroups = stratifyByKMeans(effectiveStudents, numTeams, 3);
+        setClusterStats(result.clusterStats);
+        setGroups(result.groups);
+        setIsOptimizing(false);
+        saveGroupsToDatabase(result.groups);
 
-      let bestGroups = currentGroups.map(g => [...g]);
-      let bestFitness = evaluateFitness(bestGroups, gaWeights, constraints);
-
-      for (let iteration = 0; iteration < 2500; iteration++) {
-        let testGroups = bestGroups.map(g => [...g]);
-
-        let g1Index = Math.floor(Math.random() * numTeams);
-        let g2Index = Math.floor(Math.random() * numTeams);
-        if (g1Index === g2Index) continue;
-
-        let group1 = testGroups[g1Index];
-        let group2 = testGroups[g2Index];
-        if (group1.length === 0 || group2.length === 0) continue;
-
-        let s1Index = Math.floor(Math.random() * group1.length);
-        let s2Index = Math.floor(Math.random() * group2.length);
-
-        let temp = group1[s1Index];
-        group1[s1Index] = group2[s2Index];
-        group2[s2Index] = temp;
-
-        let newFitness = evaluateFitness(testGroups, gaWeights, constraints);
-
-        if (newFitness < bestFitness) {
-          bestGroups = testGroups;
-          bestFitness = newFitness;
+        if (result.source === 'python') {
+          setDeltaNotification({
+            type: 'success',
+            msg: `🐍 AI Optimization completed via Python FastAPI Microservice (${result.executionTimeMs}ms)!`
+          });
+          setTimeout(() => setDeltaNotification(null), 4000);
         }
+      } catch (err) {
+        console.error("Optimization error:", err);
+        alert("Optimization failed: " + err.message);
+        setIsOptimizing(false);
       }
-
-      const cohortMean = effectiveStudents.reduce((tot, s) => tot + (s.technical_score || 0), 0) / effectiveStudents.length;
-      bestGroups.forEach(g => {
-        g.synergy = calculateTeamSynergy(g, cohortMean);
-        g.evaluatedModule = activeModule;
-      });
-
-      setGroups(bestGroups);
-      setIsOptimizing(false);
-      saveGroupsToDatabase(bestGroups);
     }, 400);
   };
 
@@ -1417,6 +1389,32 @@ function App() {
 
               {/* LIVE DATABASE & SYSTEM TELEMETRY PILLS */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    background: backendStatus.online ? 'rgba(56, 189, 248, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: backendStatus.online ? '#7dd3fc' : '#fca5a5',
+                    border: backendStatus.online ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)',
+                    fontWeight: '600'
+                  }}
+                  title={backendStatus.online ? 'Python FastAPI AI microservice active at http://127.0.0.1:8000' : 'Python backend offline. Run: cd backend && python run.py'}
+                >
+                  <span
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      background: backendStatus.online ? '#38bdf8' : '#ef4444',
+                      display: 'inline-block'
+                    }}
+                  ></span>
+                  {backendStatus.online ? '🐍 Python AI Engine: Online (FastAPI)' : '🔴 Python AI Backend: Offline'}
+                </span>
                 <span style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', border: '1px solid rgba(16, 185, 129, 0.4)', fontWeight: '600' }}>
                   <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', display: 'inline-block' }}></span>
                   Supabase DB: Connected

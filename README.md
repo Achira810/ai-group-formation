@@ -59,16 +59,19 @@ ai-group-formation/
 ├── frontend/                 # React 18 + Vite Web Application
 │   ├── src/
 │   │   ├── assets/           # UI Banners & Graphic Assets
-│   │   ├── services/         # Supabase Client Configuration
+│   │   ├── services/         # Supabase Client & Python AI Service Connector
 │   │   └── App.jsx           # Main Dashboard & UI Components
 │   └── package.json
 │
-├── backend/                  # Java 17+ AI Genetic Engine
-│   ├── src/main/java/
-│   │   ├── ai_engine/        # Genetic Optimization Algorithm
-│   │   ├── models/           # Student Data Models
-│   │   └── Main.java         # Execution Entrypoint
-│   └── run-dev.js            # Node runner script for Java compilation
+├── backend/                  # Python 3.10+ FastAPI AI Engine
+│   ├── ai_engine/            # K-Means, Genetic Algorithm & XAI Modules
+│   │   ├── kmeans.py
+│   │   ├── genetic_algorithm.py
+│   │   ├── benchmarking.py
+│   │   └── xai.py
+│   ├── main.py               # FastAPI Microservice & API Endpoints
+│   ├── run.py                # Server Startup Runner
+│   └── requirements.txt      # Python Dependencies (FastAPI, Uvicorn, NumPy)
 │
 ├── database/
 │   └── supabase_schema.sql   # PostgreSQL Database Schema
@@ -83,11 +86,29 @@ ai-group-formation/
 
 ### Prerequisites
 - **Node.js**: v18+ (Recommended v20/v24)
-- **Java JDK**: 17+ (with `javac` and `java` added to PATH)
+- **Python**: 3.10+ (with `pip`)
 
 ---
 
-### 1. Running the Frontend (React + Vite)
+### 1. Running the Python AI Backend (FastAPI Microservice)
+
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the Python FastAPI AI server
+python run.py
+```
+
+- API Server will launch at **`http://127.0.0.1:8000/`**
+- Interactive Swagger Documentation will be available at **`http://127.0.0.1:8000/docs`**
+
+---
+
+### 2. Running the Frontend (React + Vite)
 
 ```bash
 # Navigate to the frontend directory
@@ -102,17 +123,7 @@ npm run dev
 
 The application will launch locally at **`http://localhost:5173/`**.
 
----
-
-### 2. Running the Backend (Java AI Engine)
-
-```bash
-# Navigate to the backend directory
-cd backend
-
-# Compile and run Java AI Engine
-node run-dev.js
-```
+> **Note on Zero-Downtime Fallback:** The React frontend automatically detects whether the Python backend is running. If active, all AI optimizations run on the Python FastAPI microservice. If offline, the frontend seamlessly falls back to client-side JavaScript execution without disruption.
 
 ---
 
