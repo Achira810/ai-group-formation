@@ -27,46 +27,46 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // KDU Eke Thiyena All Faculties and Degrees Data
 const campusData = {
   "Faculty of Computing": [
-    "BSc (Hons) Computer Science", 
-    "BSc (Hons) Software Engineering", 
-    "BSc (Hons) Computer Engineering", 
-    "BSc (Hons) Information Technology", 
+    "BSc (Hons) Computer Science",
+    "BSc (Hons) Software Engineering",
+    "BSc (Hons) Computer Engineering",
+    "BSc (Hons) Information Technology",
     "BSc (Hons) Information Systems",
     "BSc (Hons) Data Science"
   ],
   "Faculty of Engineering": [
-    "Civil Engineering", 
-    "Mechanical Engineering", 
-    "Electrical & Electronic Engineering", 
-    "Electronic & Telecommunication", 
-    "Aeronautical Engineering", 
+    "Civil Engineering",
+    "Mechanical Engineering",
+    "Electrical & Electronic Engineering",
+    "Electronic & Telecommunication",
+    "Aeronautical Engineering",
     "Biomedical Engineering",
     "Naval Architecture & Marine Engineering"
   ],
   "Faculty of Management, Social Sciences & Humanities": [
-    "BSc Management & Technical Sciences", 
-    "BSc Logistics Management", 
-    "BSc Social Sciences", 
+    "BSc Management & Technical Sciences",
+    "BSc Logistics Management",
+    "BSc Social Sciences",
     "BA in Applied Data Science Communication"
   ],
   "Faculty of Allied Health Sciences": [
-    "BSc (Hons) Nursing", 
-    "BSc (Hons) Physiotherapy", 
-    "BSc (Hons) Medical Laboratory Sciences", 
-    "BSc (Hons) Radiography", 
-    "BSc (Hons) Radiotherapy", 
+    "BSc (Hons) Nursing",
+    "BSc (Hons) Physiotherapy",
+    "BSc (Hons) Medical Laboratory Sciences",
+    "BSc (Hons) Radiography",
+    "BSc (Hons) Radiotherapy",
     "BSc (Hons) Pharmacy"
   ],
   "Faculty of Built Environment & Spatial Sciences": [
-    "Bachelor of Architecture", 
-    "BSc (Hons) Quantity Surveying", 
+    "Bachelor of Architecture",
+    "BSc (Hons) Quantity Surveying",
     "BSc (Hons) Spatial Sciences"
   ],
   "Faculty of Law": [
     "Bachelor of Laws (LLB)"
   ],
   "Faculty of Technology": [
-    "BTech (Hons) in ICT", 
+    "BTech (Hons) in ICT",
     "BTech (Hons) in Biosystems Technology"
   ],
   "Faculty of Criminal Justice": [
@@ -79,20 +79,20 @@ const campusData = {
 
 function App() {
   const [students, setStudents] = useState([]);
-  const [groups, setGroups] = useState([]); 
+  const [groups, setGroups] = useState([]);
   const [clusterStats, setClusterStats] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
-  
+
   const [previewStudents, setPreviewStudents] = useState([]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
-    studentId: '', 
-    fullName: '', 
-    faculty: '', 
-    program: '', 
+    studentId: '',
+    fullName: '',
+    faculty: '',
+    program: '',
     academicYear: '',
     semester: '',
     moduleCode: '',
@@ -122,8 +122,8 @@ function App() {
     return students.find(s => s.student_id?.toLowerCase().trim() === lower) || null;
   }, [formData.studentId, students]);
 
-  const [allocationMode, setAllocationMode] = useState('groupSize'); 
-  const [allocationValue, setAllocationValue] = useState(''); 
+  const [allocationMode, setAllocationMode] = useState('groupSize');
+  const [allocationValue, setAllocationValue] = useState('');
 
   // KDU Academic Curriculum & Evaluation Module Selector States (Starts completely unfilled)
   const [selectedFaculty, setSelectedFaculty] = useState('');
@@ -385,7 +385,7 @@ function App() {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      
+
       let linesMap = {};
       textContent.items.forEach(item => {
         if (!item.str || item.str.trim() === '') return;
@@ -494,7 +494,6 @@ function App() {
             const wsName = wb.SheetNames[0];
             const ws = wb.Sheets[wsName];
 
-            const existingIdsSet = new Set(students.map(s => s.student_id?.toLowerCase().trim()));
             const seenInFileSet = new Set();
             let parsed = [];
 
@@ -502,25 +501,63 @@ function App() {
             const aoaData = XLSX.utils.sheet_to_json(ws, { header: 1 });
             const parsedKDU = parseKDUMultiModuleSheet(aoaData, availableModules);
 
-            if (parsedKDU && parsedKDU.length > 0) {
-              parsed = parsedKDU.map((st) => {
-                const lowerId = st.student_id.toLowerCase();
-                const isDuplicate = existingIdsSet.has(lowerId) || seenInFileSet.has(lowerId);
-                seenInFileSet.add(lowerId);
-                const score = activeModule ? getStudentModuleScore(st, activeModule.code, st.technical_score) : (st.technical_score || 75);
-                const degreeProgram = (selectedYear && selectedDegree) ? `${selectedYear} - ${selectedDegree}` : 'BSc (Hons) Computer Science';
-                return {
-                  student_id: st.student_id,
-                  full_name: st.full_name,
-                  degree_program: degreeProgram,
-                  technical_score: score,
-                  soft_skill_score: 75,
-                  rawScore: score,
-                  academicYear: selectedYear || '1st Year',
-                  module_scores: st.module_scores,
-                  isDuplicate
-                };
+            const mapParsedRecord = (st) => {
+              const lowerId = st.student_id.toLowerCase().trim();
+              if (seenInFileSet.has(lowerId)) return null; // deduplicate within the file itself
+              seenInFileSet.add(lowerId);
+
+              const existingStudent = students.find(s => s.student_id?.toLowerCase().trim() === lowerId);
+              const existingModules = existingStudent ? (existingStudent.module_scores || {}) : {};
+              const incomingModules = st.module_scores || {};
+
+              const newModules = {};
+              const duplicateModules = [];
+
+              Object.entries(incomingModules).forEach(([mCode, score]) => {
+                if (existingModules[mCode] !== undefined) {
+                  duplicateModules.push(mCode);
+                } else {
+                  newModules[mCode] = score;
+                }
               });
+
+              const isExisting = Boolean(existingStudent);
+              const newModulesCount = Object.keys(newModules).length;
+              const duplicateModulesCount = duplicateModules.length;
+
+              let status = 'NEW';
+              if (isExisting) {
+                status = newModulesCount > 0 ? 'MERGE' : 'UP_TO_DATE';
+              }
+
+              const score = activeModule 
+                ? getStudentModuleScore(st, activeModule.code, st.technical_score) 
+                : (st.technical_score || 75);
+
+              const degreeProgram = (selectedYear && selectedDegree) 
+                ? `${selectedYear} - ${selectedDegree}` 
+                : (existingStudent?.degree_program || st.degree_program || 'BSc (Hons) Computer Science');
+
+              return {
+                student_id: st.student_id,
+                full_name: st.full_name || existingStudent?.full_name,
+                degree_program: degreeProgram,
+                technical_score: score,
+                soft_skill_score: existingStudent?.soft_skill_score || 75,
+                rawScore: score,
+                academicYear: selectedYear || existingStudent?.academicYear || '1st Year',
+                module_scores: incomingModules,
+                newModules,
+                duplicateModules,
+                newModulesCount,
+                duplicateModulesCount,
+                isExisting,
+                status
+              };
+            };
+
+            if (parsedKDU && parsedKDU.length > 0) {
+              parsed = parsedKDU.map(mapParsedRecord).filter(Boolean);
             } else {
               // 2. Fallback to standard tabular / object parsing
               const rawData = XLSX.utils.sheet_to_json(ws);
@@ -530,26 +567,7 @@ function App() {
               }
 
               const flatParsed = parseFlatModuleSheet(rawData, availableModules);
-              parsed = flatParsed.map((row) => {
-                const lowerId = row.student_id.toLowerCase();
-                const isDuplicate = existingIdsSet.has(lowerId) || seenInFileSet.has(lowerId);
-                seenInFileSet.add(lowerId);
-                const score = activeModule ? getStudentModuleScore(row, activeModule.code, row.technical_score) : (row.technical_score || 75);
-                const degreeProgram = row.degree_program || selectedDegree || 'BSc (Hons) Computer Science';
-                const academicYear = row.academicYear || selectedYear || '1st Year';
-
-                return {
-                  student_id: row.student_id,
-                  full_name: row.full_name,
-                  degree_program: `${academicYear} - ${degreeProgram}`,
-                  technical_score: score,
-                  soft_skill_score: 75,
-                  rawScore: score,
-                  academicYear: academicYear,
-                  module_scores: row.module_scores,
-                  isDuplicate
-                };
-              });
+              parsed = flatParsed.map(mapParsedRecord).filter(Boolean);
             }
 
             if (parsed.length === 0) {
@@ -576,32 +594,96 @@ function App() {
   };
 
   const handleConfirmBatchImport = async () => {
-    const validStudents = previewStudents.filter(s => !s.isDuplicate);
-    if (validStudents.length === 0) {
-      alert("All records in this file are duplicate Student IDs. No new records to import.");
-      return;
+    if (previewStudents.length === 0) return;
+
+    let newCount = 0;
+    let updatedCount = 0;
+
+    // Use map to preserve and merge students
+    const updatedStudentsMap = new Map(students.map(s => [s.student_id?.toLowerCase().trim(), { ...s }]));
+    const upsertPayload = [];
+
+    previewStudents.forEach(st => {
+      const lowerId = st.student_id?.toLowerCase().trim();
+      const existing = updatedStudentsMap.get(lowerId);
+
+      if (existing) {
+        // Merge new modules into existing student without duplicating identical module codes
+        const mergedScores = { ...(existing.module_scores || {}) };
+        let addedModules = 0;
+
+        Object.entries(st.module_scores || {}).forEach(([mCode, score]) => {
+          // Strictly avoid duplicating the same module code under the same student ID
+          if (mergedScores[mCode] === undefined) {
+            mergedScores[mCode] = score;
+            addedModules++;
+          }
+        });
+
+        // Compute updated technical score
+        const numScores = Object.values(mergedScores).map(Number).filter(n => !isNaN(n));
+        const updatedTech = numScores.length > 0 
+          ? Math.round(numScores.reduce((a, b) => a + b, 0) / numScores.length)
+          : (existing.technical_score || st.technical_score || 75);
+
+        const updatedStudent = {
+          ...existing,
+          full_name: existing.full_name || st.full_name,
+          degree_program: existing.degree_program || st.degree_program,
+          module_scores: mergedScores,
+          technical_score: updatedTech
+        };
+
+        updatedStudentsMap.set(lowerId, updatedStudent);
+        updatedCount++;
+
+        upsertPayload.push({
+          ...(existing.id ? { id: existing.id } : {}),
+          student_id: existing.student_id,
+          full_name: existing.full_name || st.full_name,
+          degree_program: existing.degree_program || st.degree_program,
+          technical_score: updatedTech,
+          soft_skill_score: existing.soft_skill_score || 75
+        });
+      } else {
+        // Brand new student
+        const newStudent = {
+          student_id: st.student_id,
+          full_name: st.full_name,
+          degree_program: st.degree_program,
+          technical_score: st.technical_score,
+          soft_skill_score: st.soft_skill_score || 75,
+          academicYear: st.academicYear,
+          module_scores: st.module_scores || {}
+        };
+        updatedStudentsMap.set(lowerId, newStudent);
+        newCount++;
+
+        upsertPayload.push({
+          student_id: st.student_id,
+          full_name: st.full_name,
+          degree_program: st.degree_program,
+          technical_score: st.technical_score,
+          soft_skill_score: st.soft_skill_score || 75
+        });
+      }
+    });
+
+    // Save/upsert to Supabase
+    try {
+      if (upsertPayload.length > 0) {
+        await supabase.from('students').upsert(upsertPayload, { onConflict: 'student_id' });
+      }
+    } catch (dbErr) {
+      console.warn("Note while syncing batch import to Supabase:", dbErr);
     }
 
-    const payload = validStudents.map(s => ({
-      student_id: s.student_id,
-      full_name: s.full_name,
-      degree_program: s.degree_program,
-      technical_score: s.technical_score,
-      soft_skill_score: s.soft_skill_score
-    }));
+    const finalStudentList = Array.from(updatedStudentsMap.values());
+    setStudents(finalStudentList);
+    setShowPreviewModal(false);
+    setPreviewStudents([]);
 
-    const { error } = await supabase.from('students').upsert(payload, { onConflict: 'student_id' });
-
-    if (!error) {
-      const skippedCount = previewStudents.length - validStudents.length;
-      alert(`Successfully imported ${payload.length} new students!${skippedCount > 0 ? ` (${skippedCount} duplicate IDs skipped)` : ''}`);
-      setStudents(prev => [...prev, ...validStudents]);
-      setShowPreviewModal(false);
-      setPreviewStudents([]);
-    } else {
-      console.error("Batch import error:", error);
-      alert(`Error saving imported students: ${error.message}`);
-    }
+    alert(`✅ Successfully imported and updated all ${previewStudents.length} students!\n\n• ${newCount} new students added\n• ${updatedCount} existing students updated with new semester module marks.`);
   };
 
   useEffect(() => {
@@ -978,10 +1060,10 @@ function App() {
         prev.map((s) =>
           s.student_id?.toLowerCase().trim() === trimmedId.toLowerCase()
             ? {
-                ...s,
-                module_scores: updatedModuleScores,
-                technical_score: updatedTechScore
-              }
+              ...s,
+              module_scores: updatedModuleScores,
+              technical_score: updatedTechScore
+            }
             : s
         )
       );
@@ -1002,16 +1084,16 @@ function App() {
     }
 
     const degreeWithYear = `${formData.academicYear} - ${formData.program}`;
-    
+
     const newStudent = {
       student_id: trimmedId,
       full_name: trimmedName,
-      degree_program: degreeWithYear, 
+      degree_program: degreeWithYear,
       academicYear: formData.academicYear,
       semester: formData.semester || '',
       module_scores: moduleScores,
       technical_score: calculatedTechScore,
-      soft_skill_score: 75 
+      soft_skill_score: 75
     };
 
     const { data: insertedData, error } = await supabase.from('students').upsert([newStudent], { onConflict: 'student_id' }).select();
@@ -1025,12 +1107,12 @@ function App() {
         }
         return [...prev, createdStudent];
       });
-      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' })); 
+      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' }));
     } else {
       console.warn('Database note on adding student:', error);
       // Still allow adding to local session
       setStudents((prev) => [...prev, newStudent]);
-      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' })); 
+      setFormData(prev => ({ ...prev, studentId: '', fullName: '', scoreValue: '', moduleCode: '' }));
     }
   };
 
@@ -1150,7 +1232,7 @@ function App() {
       let bestFitness = evaluateFitness(bestGroups, gaWeights, constraints);
 
       for (let iteration = 0; iteration < 2500; iteration++) {
-        let testGroups = bestGroups.map(g => [...g]); 
+        let testGroups = bestGroups.map(g => [...g]);
 
         let g1Index = Math.floor(Math.random() * numTeams);
         let g2Index = Math.floor(Math.random() * numTeams);
@@ -1181,7 +1263,7 @@ function App() {
         g.evaluatedModule = activeModule;
       });
 
-      setGroups(bestGroups); 
+      setGroups(bestGroups);
       setIsOptimizing(false);
       saveGroupsToDatabase(bestGroups);
     }, 400);
@@ -1250,7 +1332,7 @@ function App() {
     const modLabel = activeModule ? `${activeModule.code} - ${activeModule.name}` : 'General Competency';
     const modCode = activeModule ? activeModule.code : 'EVAL';
 
-    const exportRows = groups.flatMap((group, groupIndex) => 
+    const exportRows = groups.flatMap((group, groupIndex) =>
       group.map((student) => ({
         "Team": `Team ${String(groupIndex + 1).padStart(2, '0')}`,
         "Student ID": sanitizeSpreadsheetCell(student.student_id),
@@ -1278,22 +1360,22 @@ function App() {
     XLSX.writeFile(wb, `KDU_AI_Teams_${modCode}_${selectedYear || 'Year'}_${selectedSemester || 'Sem'}.xlsx`);
   };
 
-  const filteredStudents = effectiveStudents.filter(s => 
+  const filteredStudents = effectiveStudents.filter(s =>
     s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.degree_program?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const avgTechScore = effectiveStudents.length > 0 
+  const avgTechScore = effectiveStudents.length > 0
     ? (effectiveStudents.reduce((acc, curr) => acc + (curr.technical_score || 0), 0) / effectiveStudents.length).toFixed(1)
     : 0;
 
   return (
     <div className="modern-root">
-      
+
 
       <div className="container">
-        
+
         {/* HERO BANNER */}
         <div className="hero-card">
           <div className="hero-img-wrapper">
@@ -1360,7 +1442,7 @@ function App() {
           marginBottom: '24px'
         }}>
           {/* CARD 1: BENCHMARK ARENA */}
-          <div 
+          <div
             onClick={() => setIsBenchmarkOpen(true)}
             className="hub-card"
             style={{
@@ -1407,7 +1489,7 @@ function App() {
           </div>
 
           {/* CARD 2: CSP CONSTRAINTS */}
-          <div 
+          <div
             onClick={() => setIsConstraintsOpen(true)}
             className="hub-card"
             style={{
@@ -1437,7 +1519,7 @@ function App() {
           </div>
 
           {/* CARD 3: BELBIN ROLES */}
-          <div 
+          <div
             onClick={() => setIsBelbinOpen(true)}
             className="hub-card"
             style={{
@@ -1467,7 +1549,7 @@ function App() {
           </div>
 
           {/* CARD 4: POST-FORMATION BATCH GRADING & ICF */}
-          <div 
+          <div
             onClick={() => setIsBatchGradingOpen(true)}
             className="hub-card"
             style={{
@@ -2053,7 +2135,7 @@ function App() {
                       <span>Competency Metric</span>
                       <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'normal', fontFamily: 'monospace' }}>
                         {isSem1
-                          ? activeModule 
+                          ? activeModule
                             ? `[${activeModule.code}] via G.C.E. A/L Z-Score`
                             : 'G.C.E. A/L Intake Z-Score'
                           : activeModule
@@ -2078,7 +2160,7 @@ function App() {
                     const fillColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
                     const role = student.belbin_role || 'Technical Implementer';
                     const roleIcon = getRoleIcon(role);
-                    
+
                     return (
                       <tr key={student.id}>
                         <td>
@@ -2338,79 +2420,79 @@ function App() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px' }}>
-                {/* Alpha */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                    <span>Academic Equity (α)</span>
-                    <span style={{ color: '#818cf8', fontWeight: '700' }}>{gaWeights.alpha.toFixed(1)}x</span>
+                  {/* Alpha */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                      <span>Academic Equity (α)</span>
+                      <span style={{ color: '#818cf8', fontWeight: '700' }}>{gaWeights.alpha.toFixed(1)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="2.0"
+                      step="0.1"
+                      value={gaWeights.alpha}
+                      onChange={(e) => setGaWeights({ ...gaWeights, alpha: parseFloat(e.target.value) })}
+                      style={{ width: '100%', accentColor: '#6366f1' }}
+                    />
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Minimizes GPA/Z-Score variance across groups</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="2.0"
-                    step="0.1"
-                    value={gaWeights.alpha}
-                    onChange={(e) => setGaWeights({ ...gaWeights, alpha: parseFloat(e.target.value) })}
-                    style={{ width: '100%', accentColor: '#6366f1' }}
-                  />
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>Minimizes GPA/Z-Score variance across groups</span>
-                </div>
 
-                {/* Beta */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                    <span>Discipline Diversity (β)</span>
-                    <span style={{ color: '#a855f7', fontWeight: '700' }}>{gaWeights.beta.toFixed(1)}x</span>
+                  {/* Beta */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                      <span>Discipline Diversity (β)</span>
+                      <span style={{ color: '#a855f7', fontWeight: '700' }}>{gaWeights.beta.toFixed(1)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="2.0"
+                      step="0.1"
+                      value={gaWeights.beta}
+                      onChange={(e) => setGaWeights({ ...gaWeights, beta: parseFloat(e.target.value) })}
+                      style={{ width: '100%', accentColor: '#a855f7' }}
+                    />
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Penalizes monodisciplinary student cliques</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="2.0"
-                    step="0.1"
-                    value={gaWeights.beta}
-                    onChange={(e) => setGaWeights({ ...gaWeights, beta: parseFloat(e.target.value) })}
-                    style={{ width: '100%', accentColor: '#a855f7' }}
-                  />
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>Penalizes monodisciplinary student cliques</span>
-                </div>
 
-                {/* Gamma */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                    <span>CSP Constraints (γ)</span>
-                    <span style={{ color: '#ec4899', fontWeight: '700' }}>{gaWeights.gamma.toFixed(1)}x</span>
+                  {/* Gamma */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                      <span>CSP Constraints (γ)</span>
+                      <span style={{ color: '#ec4899', fontWeight: '700' }}>{gaWeights.gamma.toFixed(1)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="2.0"
+                      step="0.1"
+                      value={gaWeights.gamma}
+                      onChange={(e) => setGaWeights({ ...gaWeights, gamma: parseFloat(e.target.value) })}
+                      style={{ width: '100%', accentColor: '#ec4899' }}
+                    />
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Enforces Affinity & Conflict pairings</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="2.0"
-                    step="0.1"
-                    value={gaWeights.gamma}
-                    onChange={(e) => setGaWeights({ ...gaWeights, gamma: parseFloat(e.target.value) })}
-                    style={{ width: '100%', accentColor: '#ec4899' }}
-                  />
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>Enforces Affinity & Conflict pairings</span>
-                </div>
 
-                {/* Delta */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                    <span>Belbin Role Balance (δ)</span>
-                    <span style={{ color: '#f59e0b', fontWeight: '700' }}>{gaWeights.delta.toFixed(1)}x</span>
+                  {/* Delta */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                      <span>Belbin Role Balance (δ)</span>
+                      <span style={{ color: '#f59e0b', fontWeight: '700' }}>{gaWeights.delta.toFixed(1)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="2.0"
+                      step="0.1"
+                      value={gaWeights.delta}
+                      onChange={(e) => setGaWeights({ ...gaWeights, delta: parseFloat(e.target.value) })}
+                      style={{ width: '100%', accentColor: '#f59e0b' }}
+                    />
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Ensures Leader + Coder + Analyst balance</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="2.0"
-                    step="0.1"
-                    value={gaWeights.delta}
-                    onChange={(e) => setGaWeights({ ...gaWeights, delta: parseFloat(e.target.value) })}
-                    style={{ width: '100%', accentColor: '#f59e0b' }}
-                  />
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>Ensures Leader + Coder + Analyst balance</span>
                 </div>
               </div>
-            </div>
             )}
           </div>
 
@@ -2781,28 +2863,46 @@ function App() {
                         <th>Student ID</th>
                         <th>Full Name</th>
                         <th>Degree Program</th>
-                        <th>File Score</th>
+                        <th>Import Status & Modules</th>
                         <th>Calculated AI Tech Score</th>
                       </tr>
                     </thead>
                     <tbody>
                       {previewStudents.map((s, idx) => (
-                        <tr key={idx} style={{ opacity: s.isDuplicate ? 0.6 : 1, background: s.isDuplicate ? 'rgba(239, 68, 68, 0.08)' : 'transparent' }}>
+                        <tr key={idx} style={{ background: s.status === 'NEW' ? 'rgba(16, 185, 129, 0.04)' : s.status === 'MERGE' ? 'rgba(56, 189, 248, 0.04)' : 'transparent' }}>
                           <td>{idx + 1}</td>
-                          <td style={{ fontFamily: 'monospace', color: s.isDuplicate ? '#f87171' : '#818cf8', fontWeight: 'bold' }}>
+                          <td style={{ fontFamily: 'monospace', color: '#818cf8', fontWeight: 'bold' }}>
                             {s.student_id}
-                            {s.isDuplicate && (
-                              <span style={{ marginLeft: '8px', fontSize: '11px', background: 'rgba(239,68,68,0.2)', color: '#f87171', padding: '2px 6px', borderRadius: '4px' }}>
-                                ⚠️ Duplicate (Skipped)
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: '600', color: '#f8fafc' }}>{s.full_name}</div>
+                          </td>
+                          <td style={{ fontSize: '12px', color: '#cbd5e1' }}>{s.degree_program}</td>
+                          <td>
+                            {s.status === 'NEW' ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+                                ✨ New Student ({Object.keys(s.module_scores || {}).length} modules)
+                              </span>
+                            ) : s.status === 'MERGE' ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', border: '1px solid rgba(56, 189, 248, 0.4)' }}>
+                                  🔄 Update (+{s.newModulesCount} new modules)
+                                </span>
+                                {s.duplicateModulesCount > 0 && (
+                                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                    ({s.duplicateModulesCount} already present modules preserved)
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', background: 'rgba(99, 102, 241, 0.15)', color: '#c7d2fe', padding: '3px 8px', borderRadius: '6px', fontWeight: '600' }}>
+                                ✓ Up-to-Date (All {s.duplicateModulesCount} modules recorded)
                               </span>
                             )}
                           </td>
-                          <td style={{ fontWeight: '600' }}>{s.full_name}</td>
-                          <td>{s.degree_program}</td>
-                          <td>{s.rawScore}</td>
                           <td>
-                            <span style={{ fontWeight: '700', color: s.isDuplicate ? '#94a3b8' : s.technical_score >= 75 ? '#10b981' : '#f59e0b' }}>
-                              {s.technical_score}
+                            <span style={{ fontWeight: '700', color: s.technical_score >= 75 ? '#10b981' : '#f59e0b' }}>
+                              {s.technical_score}%
                             </span>
                           </td>
                         </tr>
@@ -2823,10 +2923,10 @@ function App() {
                 <button
                   type="button"
                   className="btn-primary"
-                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', padding: '10px 22px', fontWeight: '700' }}
                   onClick={handleConfirmBatchImport}
                 >
-                  <span>✅</span> Confirm & Save {previewStudents.filter(s => !s.isDuplicate).length} New Students
+                  <span>✅</span> Confirm & Save / Update {previewStudents.length} Students
                 </button>
               </div>
             </div>

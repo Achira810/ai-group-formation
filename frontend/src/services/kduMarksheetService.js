@@ -157,6 +157,7 @@ export const parseKDUMultiModuleSheet = (rawData, availableModules = []) => {
   const rows = rawData;
   let idColIdx = -1;
   let nameColIdx = -1;
+  let idHeaderRowIdx = -1;
   let subheaderRowIdx = -1;
   let maxSubheaderMatches = 0;
   let subjects = []; // { code, col, span: [startCol, endCol] }
@@ -192,6 +193,7 @@ export const parseKDUMultiModuleSheet = (rawData, availableModules = []) => {
         upper.includes("SVC NO") || upper.includes("INDEX NO") || upper.includes("STUDENT ID") || upper.includes("REG NO") || upper.includes("REGT NO")
       )) {
         idColIdx = c;
+        idHeaderRowIdx = r;
       }
 
       // Detect Candidate Name Column
@@ -199,15 +201,23 @@ export const parseKDUMultiModuleSheet = (rawData, availableModules = []) => {
         upper.includes("CANDIDATE") || upper.includes("FULL NAME") || upper.includes("STUDENT NAME")
       )) {
         nameColIdx = c;
+        if (idHeaderRowIdx === -1) idHeaderRowIdx = r;
       }
 
-      // Detect Subject Codes (e.g. CM11033, CS11012, etc.)
+      // Detect Subject Codes (e.g. CM11033, CS11012, etc.) or Z-Score
       const codeMatch = cellVal.match(/\b([A-Z]{2,4}\d{4,5}[A-Z]?)\b/);
       if (codeMatch) {
         const foundCode = codeMatch[1];
         if (!subjects.some(s => s.code === foundCode)) {
           subjects.push({
             code: foundCode,
+            col: c
+          });
+        }
+      } else if (upper.includes("Z-SCORE") || upper.includes("ZSCORE") || upper.includes("AL_ZSCORE")) {
+        if (!subjects.some(s => s.code === "AL_ZSCORE")) {
+          subjects.push({
+            code: "AL_ZSCORE",
             col: c
           });
         }
@@ -226,8 +236,10 @@ export const parseKDUMultiModuleSheet = (rawData, availableModules = []) => {
     subjects[i].span = [subjects[i].col, nextCol - 1];
   }
 
-  // 3. Data start row is strictly after subheader row (or row 13 fallback)
-  const dataStartRowIdx = subheaderRowIdx !== -1 ? subheaderRowIdx + 1 : 13;
+  // 3. Data start row: if subheader (FINAL/GR) row exists, start after it; otherwise start right after ID header!
+  const dataStartRowIdx = subheaderRowIdx !== -1 
+    ? subheaderRowIdx + 1 
+    : (idHeaderRowIdx !== -1 ? idHeaderRowIdx + 1 : 1);
 
   // 4. Parse Student Records & Subject Scores
   const parsedStudents = [];
