@@ -152,7 +152,7 @@ Developed by:
 - **[Achira Hathsidu](https://github.com/Achira810)**
 - **[Duvindu Lasath](https://github.com/Lasath192)**
 - **[Piravahiny](https://github.com/Piravahiny)**
-- **Wageesha Muthugala**
+- **[Wageesha Muthugala](https://github.com/WageeshaMuthugala)**
 - **[Maheshika Banagala](https://github.com/Maheshika2001)**
 
 ---
