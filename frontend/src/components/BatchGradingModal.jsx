@@ -676,6 +676,110 @@ export const BatchGradingModal = ({
           </div>
         </div>
 
+        {/* 2.5 TEAM SELECTOR BAR (Pinned above scrollable body for Single Team & Matrix Views) */}
+        {(activeTab === 'team_detail' || activeTab === 'matrix') && groups.length > 0 && (
+          <div style={{
+            padding: '12px 28px',
+            background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+            flexShrink: 0,
+            overflowX: 'auto',
+            scrollbarWidth: 'thin'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '11px',
+              fontWeight: '800',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: '#94a3b8',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>
+              <span style={{ fontSize: '13px' }}>👥</span>
+              <span>Select Team:</span>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              overflowX: 'auto',
+              flexWrap: 'nowrap',
+              padding: '4px 2px',
+              scrollbarWidth: 'thin',
+              flexShrink: 0
+            }}>
+              {groups.map((grp, idx) => {
+                const isSel = idx === selectedGroupIndex;
+                const an = batchAnalyses[idx]?.analysis;
+                const hasFreerider = an?.freeRidersCount > 0;
+                const hasCollusion = an?.collusionFlags?.length > 0;
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedGroupIndex(idx)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      background: isSel 
+                        ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' 
+                        : 'rgba(30, 41, 59, 0.85)',
+                      border: isSel ? '1px solid #a5b4fc' : '1px solid rgba(255, 255, 255, 0.12)',
+                      color: isSel ? '#ffffff' : '#cbd5e1',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      boxShadow: isSel ? '0 4px 14px rgba(99, 102, 241, 0.4)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSel) {
+                        e.currentTarget.style.background = 'rgba(51, 65, 85, 0.95)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                        e.currentTarget.style.color = '#ffffff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSel) {
+                        e.currentTarget.style.background = 'rgba(30, 41, 59, 0.85)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                        e.currentTarget.style.color = '#cbd5e1';
+                      }
+                    }}
+                  >
+                    <span>Team {String(idx + 1).padStart(2, '0')}</span>
+                    <span style={{
+                      fontSize: '11px',
+                      padding: '1px 6px',
+                      borderRadius: '6px',
+                      background: isSel ? 'rgba(255, 255, 255, 0.2)' : 'rgba(15, 23, 42, 0.6)',
+                      color: isSel ? '#ffffff' : '#94a3b8',
+                      fontWeight: '700'
+                    }}>
+                      {grp.length}
+                    </span>
+                    {hasFreerider && <span title="Free-rider detected" style={{ fontSize: '11px' }}>⚠️</span>}
+                    {hasCollusion && <span title="Mutual collusion alert" style={{ fontSize: '11px' }}>🚨</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* 3. MODAL BODY (SCROLLABLE) */}
         <div style={{
           padding: '24px 28px',
@@ -691,49 +795,6 @@ export const BatchGradingModal = ({
           {/* ============================================================== */}
           {activeTab === 'team_detail' && (
             <>
-              {/* Team Selector Pills Strip */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginRight: '4px' }}>
-                  Select Team:
-                </span>
-                {groups.map((grp, idx) => {
-                  const isSel = idx === selectedGroupIndex;
-                  const an = batchAnalyses[idx]?.analysis;
-                  const hasFreerider = an?.freeRidersCount > 0;
-                  const hasCollusion = an?.collusionFlags?.length > 0;
-
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setSelectedGroupIndex(idx)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '10px',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        background: isSel 
-                          ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' 
-                          : 'rgba(30, 41, 59, 0.65)',
-                        border: isSel ? '1px solid #a5b4fc' : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: isSel ? '#ffffff' : '#cbd5e1',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <span>Team {String(idx + 1).padStart(2, '0')}</span>
-                      <span style={{ fontSize: '10px', opacity: 0.85 }}>({grp.length})</span>
-                      {hasFreerider && <span title="Free-rider detected" style={{ fontSize: '10px' }}>⚠️</span>}
-                      {hasCollusion && <span title="Mutual collusion alert" style={{ fontSize: '10px' }}>🚨</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Top Controls Grid: (Left: Rubric Evaluation Form, Right: Simulation & Scenarios) */}
               <div style={{
                 display: 'grid',
