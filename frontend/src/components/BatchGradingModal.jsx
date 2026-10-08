@@ -425,6 +425,7 @@ export const BatchGradingModal = ({
         borderRadius: '24px',
         width: '100%',
         maxWidth: '1240px',
+        height: '92vh',
         maxHeight: '92vh',
         display: 'flex',
         flexDirection: 'column',
@@ -442,7 +443,8 @@ export const BatchGradingModal = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '16px'
+          gap: '16px',
+          flexShrink: 0
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -565,7 +567,8 @@ export const BatchGradingModal = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px'
+          gap: '12px',
+          flexShrink: 0
         }}>
           {/* Main View Tabs */}
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -784,10 +787,13 @@ export const BatchGradingModal = ({
         <div style={{
           padding: '24px 28px',
           overflowY: 'auto',
+          minHeight: 0,
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px'
+          gap: '20px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(99, 102, 241, 0.4) transparent'
         }}>
 
           {/* ============================================================== */}
@@ -1089,9 +1095,12 @@ export const BatchGradingModal = ({
                 background: 'rgba(15, 23, 42, 0.6)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '16px',
-                overflow: 'hidden'
+                overflowX: 'auto',
+                scrollbarWidth: 'thin',
+                flexShrink: 0,
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)'
               }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
+                <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.8)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8' }}>
                       <th style={{ padding: '12px 16px' }}>Student</th>
@@ -1297,9 +1306,11 @@ export const BatchGradingModal = ({
                 background: 'rgba(15, 23, 42, 0.6)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '16px',
-                overflow: 'hidden'
+                overflowX: 'auto',
+                scrollbarWidth: 'thin',
+                flexShrink: 0
               }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
+                <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.8)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8' }}>
                       <th style={{ padding: '12px 16px' }}>Team</th>
@@ -1401,9 +1412,11 @@ export const BatchGradingModal = ({
                 background: 'rgba(15, 23, 42, 0.6)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '16px',
-                overflow: 'hidden'
+                overflowX: 'auto',
+                scrollbarWidth: 'thin',
+                flexShrink: 0
               }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
+                <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.8)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8' }}>
                       <th style={{ padding: '12px 14px' }}>Reviewer (Evaluator)</th>
@@ -1555,13 +1568,14 @@ export const BatchGradingModal = ({
         {/* 4. MODAL FOOTER */}
         <div style={{
           padding: '14px 28px',
-          background: 'rgba(15, 23, 42, 0.75)',
+          background: 'rgba(15, 23, 42, 0.85)',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '11px',
-          color: '#94a3b8'
+          color: '#94a3b8',
+          flexShrink: 0
         }}>
           <div>
             <span>General Sir John Kotelawala Defence University • Faculty of Computing</span>
