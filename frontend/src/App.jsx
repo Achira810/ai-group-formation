@@ -778,6 +778,12 @@ function App() {
     try {
       // 1. Clear previous group assignments
       try {
+        try {
+          await supabase.from('peer_evaluations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          await supabase.from('group_grades').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        } catch (evalCleanErr) {
+          // Tables may not exist if unmigrated
+        }
         await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       } catch (cErr) {
@@ -1109,6 +1115,11 @@ function App() {
 
   const handleDeleteStudent = async (studentDbId) => {
     try {
+      try {
+        await supabase.from('peer_evaluations').delete().or(`evaluator_id.eq.${studentDbId},evaluatee_id.eq.${studentDbId}`);
+      } catch (peErr) {
+        // Table may not exist yet if unmigrated
+      }
       await supabase.from('team_constraints').delete().or(`student_a_id.eq.${studentDbId},student_b_id.eq.${studentDbId}`);
       await supabase.from('team_health_logs').delete().eq('student_id', studentDbId);
       await supabase.from('group_members').delete().eq('student_id', studentDbId);
@@ -1142,7 +1153,13 @@ function App() {
     if (!confirmed) return;
 
     try {
-      // 1. Delete dependent constraints & group associations first
+      // 1. Delete dependent evaluations, grades, constraints & group associations first
+      try {
+        await supabase.from('peer_evaluations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('group_grades').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (evalCleanErr) {
+        // Tables may not exist yet if unmigrated
+      }
       await supabase.from('team_constraints').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('team_health_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');

@@ -87,11 +87,6 @@ def optimize_teams(payload: OptimizeRequest):
     total_tech = sum(get_student_score(s) for s in payload.students)
     cohort_mean = total_tech / len(payload.students) if payload.students else 75.0
 
-    # Attach synergy metrics, rationale, and evaluated module to each team
-    for group in best_groups:
-        synergy = calculate_team_synergy(group, cohort_mean=cohort_mean)
-        pass
-
     # For seamless frontend consumption, return formatted groups with metadata
     formatted_groups = []
     for g in best_groups:
