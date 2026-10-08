@@ -48,6 +48,7 @@ class KMeansRequest(BaseModel):
     k: int = Field(default=3, ge=1, le=10)
 
 @app.get("/")
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {
@@ -58,6 +59,7 @@ def health_check():
         "docs_url": "/docs"
     }
 
+@app.post("/optimize-teams")
 @app.post("/api/optimize-teams")
 def optimize_teams(payload: OptimizeRequest):
     if not payload.students:
@@ -88,10 +90,6 @@ def optimize_teams(payload: OptimizeRequest):
     # Attach synergy metrics, rationale, and evaluated module to each team
     for group in best_groups:
         synergy = calculate_team_synergy(group, cohort_mean=cohort_mean)
-        # In Python dictionaries, attach as dictionary or object
-        # React expects group to be an array with properties or an array of students
-        # In JS: group is an Array with group.synergy and group.evaluatedModule
-        # When serialized to JSON, we can return groups as structured objects or lists with metadata.
         pass
 
     # For seamless frontend consumption, return formatted groups with metadata
@@ -117,6 +115,7 @@ def optimize_teams(payload: OptimizeRequest):
         "executionTimeMs": execution_time_ms
     }
 
+@app.post("/benchmark")
 @app.post("/api/benchmark")
 def run_benchmark(payload: BenchmarkRequest):
     if not payload.students:
@@ -137,6 +136,7 @@ def run_benchmark(payload: BenchmarkRequest):
         "totalExecutionTimeMs": round((t1 - t0) * 1000.0, 2)
     }
 
+@app.post("/kmeans")
 @app.post("/api/kmeans")
 def run_kmeans_endpoint(payload: KMeansRequest):
     if not payload.students:

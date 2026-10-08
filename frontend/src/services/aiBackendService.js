@@ -6,7 +6,12 @@
  * multi-objective optimization are executed exclusively via the Python FastAPI Backend.
  */
 
-export const PYTHON_BACKEND_URL = import.meta.env.VITE_PYTHON_BACKEND_URL || 'http://127.0.0.1:8000';
+const rawBackendUrl = import.meta.env.VITE_PYTHON_BACKEND_URL;
+export const PYTHON_BACKEND_URL = (
+  rawBackendUrl && rawBackendUrl.trim() !== ''
+    ? rawBackendUrl.trim().replace(/\/+$/, '')
+    : (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '')
+);
 
 /**
  * Checks if the Python FastAPI backend is currently active and reachable.
@@ -14,7 +19,7 @@ export const PYTHON_BACKEND_URL = import.meta.env.VITE_PYTHON_BACKEND_URL || 'ht
 export async function checkBackendHealth() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const res = await fetch(`${PYTHON_BACKEND_URL}/api/health`, {
       method: 'GET',
