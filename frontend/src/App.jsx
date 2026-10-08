@@ -1450,36 +1450,41 @@ function App() {
               borderRadius: '18px',
               padding: '18px 20px',
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.15)'
+              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.3)', color: '#c7d2fe', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
-                  Empirical Suite
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '24px' }}>⚡</span>
+                  <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.3)', color: '#c7d2fe', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
+                    Empirical Suite
+                  </span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                  ★ 4 Models
                 </span>
               </div>
-              <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
-                ★ 4 Models
-              </span>
+
+              <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc', margin: '0 0 6px 0' }}>
+                Algorithmic Benchmarking Arena
+              </h4>
+
+              {/* Visual Mini Badges Strip */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '8px 0 10px 0' }}>
+                <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(148, 163, 184, 0.15)', color: '#cbd5e1' }}>🎲 Random</span>
+                <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', color: '#fde68a' }}>🐍 Snake</span>
+                <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(236, 72, 153, 0.15)', color: '#fbcfe8' }}>🧬 Pure GA</span>
+                <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', fontWeight: '700' }}>🏆 Hybrid GA</span>
+              </div>
+
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                Multi-criteria quantitative verification: σ² Variance, Diversity Rate (%), Latency (ms), and Pareto Fitness.
+              </p>
             </div>
-
-            <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc', margin: '0 0 6px 0' }}>
-              Algorithmic Benchmarking Arena
-            </h4>
-
-            {/* Visual Mini Badges Strip */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '8px 0 10px 0' }}>
-              <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(148, 163, 184, 0.15)', color: '#cbd5e1' }}>🎲 Random</span>
-              <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', color: '#fde68a' }}>🐍 Snake</span>
-              <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(236, 72, 153, 0.15)', color: '#fbcfe8' }}>🧬 Pure GA</span>
-              <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', fontWeight: '700' }}>🏆 Hybrid GA</span>
-            </div>
-
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
-              Multi-criteria quantitative verification: σ² Variance, Diversity Rate (%), Latency (ms), and Pareto Fitness.
-            </p>
 
             <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
               <span style={{ color: '#818cf8', fontWeight: '700' }}>Launch Interactive Arena</span>
@@ -1494,26 +1499,33 @@ function App() {
             style={{
               background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(112, 26, 117, 0.35) 100%)',
               border: '1px solid rgba(192, 132, 252, 0.35)',
-              borderRadius: '16px',
-              padding: '16px 18px',
-              cursor: 'pointer'
+              borderRadius: '18px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(192, 132, 252, 0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px' }}>🔗</span>
-              <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(192, 132, 252, 0.25)', color: '#f0abfc' }}>
-                {constraints.length} Active Rules
-              </span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🔗</span>
+                <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(192, 132, 252, 0.25)', color: '#f0abfc' }}>
+                  {constraints.length} Active Rules
+                </span>
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#f3e8ff', margin: '0 0 6px 0' }}>
+                CSP Constraint Rules
+              </h4>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                Define student pair Affinities (Must Pair) and Conflicts (Must Separate) with Genetic Algorithm penalties.
+              </p>
             </div>
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#f3e8ff', margin: '0 0 4px 0' }}>
-              CSP Constraint Rules
-            </h4>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
-              Define student pair Affinities (Must Pair) and Conflicts (Must Separate) with Genetic Algorithm penalties.
-            </p>
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#c084fc', fontWeight: '600' }}>
-              <span>Manage Constraints</span>
-              <span>→</span>
+
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: '#c084fc', fontWeight: '700' }}>Manage Constraints</span>
+              <span style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(192, 132, 252, 0.25)', color: '#f5d0fe', fontWeight: '700' }}>Open ➔</span>
             </div>
           </div>
 
@@ -1524,26 +1536,33 @@ function App() {
             style={{
               background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(120, 53, 15, 0.35) 100%)',
               border: '1px solid rgba(251, 191, 36, 0.35)',
-              borderRadius: '16px',
-              padding: '16px 18px',
-              cursor: 'pointer'
+              borderRadius: '18px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(245, 158, 11, 0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px' }}>🎭</span>
-              <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.25)', color: '#fde68a' }}>
-                {getActiveRoles().length} Roles Active
-              </span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🎭</span>
+                <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.25)', color: '#fde68a' }}>
+                  {getActiveRoles().length} Roles Active
+                </span>
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#fef3c7', margin: '0 0 6px 0' }}>
+                Belbin Role Profiler
+              </h4>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                Profile operational strengths: Team Coordinator, Technical Implementer, Research Analyst, or QA Lead.
+              </p>
             </div>
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#fef3c7', margin: '0 0 4px 0' }}>
-              Belbin Role Profiler
-            </h4>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
-              Profile operational strengths: Team Coordinator, Technical Implementer, Research Analyst, or QA Lead.
-            </p>
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#fbbf24', fontWeight: '600' }}>
-              <span>Open Profiler & Survey</span>
-              <span>→</span>
+
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: '#fbbf24', fontWeight: '700' }}>Open Profiler & Survey</span>
+              <span style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.25)', color: '#fef3c7', fontWeight: '700' }}>Open ➔</span>
             </div>
           </div>
 
@@ -1554,26 +1573,33 @@ function App() {
             style={{
               background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(13, 148, 136, 0.35) 100%)',
               border: '1px solid rgba(45, 212, 191, 0.35)',
-              borderRadius: '16px',
-              padding: '16px 18px',
-              cursor: 'pointer'
+              borderRadius: '18px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(45, 212, 191, 0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px' }}>⚖️</span>
-              <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(45, 212, 191, 0.25)', color: '#5eead4' }}>
-                Kaufman ICF
-              </span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '24px' }}>⚖️</span>
+                <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(45, 212, 191, 0.25)', color: '#5eead4' }}>
+                  Kaufman ICF
+                </span>
+              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#ccfbf1', margin: '0 0 6px 0' }}>
+                Batch Grading & Anti-Freerider
+              </h4>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                Post-formation assessment: peer ratings (T, S, C, Q), anti-freerider penalties, and collusion detection.
+              </p>
             </div>
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#ccfbf1', margin: '0 0 4px 0' }}>
-              Batch Grading & Anti-Freerider
-            </h4>
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
-              Post-formation assessment: peer ratings (T, S, C, Q), anti-freerider penalties, and collusion detection.
-            </p>
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#2dd4bf', fontWeight: '600' }}>
-              <span>Open Grading Console</span>
-              <span>→</span>
+
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: '#2dd4bf', fontWeight: '700' }}>Open Grading Console</span>
+              <span style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(45, 212, 191, 0.25)', color: '#ccfbf1', fontWeight: '700' }}>Open ➔</span>
             </div>
           </div>
         </div>
