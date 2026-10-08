@@ -1371,41 +1371,43 @@ function App() {
           <div className="hero-img-wrapper">
             <img src={heroBanner} alt="KDU AI Group Formation" className="hero-img" />
             <div className="hero-overlay">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '10px' }}>
-                <div className="hero-badge">
-                  ✨ KDU ACADEMIC AI SYSTEM (STAGE 3)
+              <div style={{ maxWidth: '650px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                  <div className="hero-badge" style={{ margin: 0 }}>
+                    ✨ KDU ACADEMIC AI SYSTEM (STAGE 3)
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLoadSampleCohort}
+                    style={{
+                      padding: '5px 14px',
+                      borderRadius: '9999px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#ffffff',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                    }}
+                    title="Populate 12 KDU undergraduates, 2 active rules, and 3 AI teams on Supabase"
+                  >
+                    <span>🌟</span>
+                    <span>Load KDU Sample Cohort (Demo)</span>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleLoadSampleCohort}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    color: '#ffffff',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                  title="Populate 12 KDU undergraduates, 2 active rules, and 3 AI teams on Supabase"
-                >
-                  <span>🌟</span>
-                  <span>Load KDU Sample Cohort (Demo)</span>
-                </button>
-              </div>
 
-              <h1 className="hero-title">AI Group Formation System</h1>
-              <p className="hero-subtitle">
-                Automated multi-objective team optimization powered by Fuzzy Logic Skill Profiling, K-Means Clustering, and a Genetic Algorithm Balancing Engine.
-              </p>
+                <h1 className="hero-title">AI Group Formation System</h1>
+                <p className="hero-subtitle">
+                  Automated multi-objective team optimization powered by Fuzzy Logic Skill Profiling, K-Means Clustering, and a Genetic Algorithm Balancing Engine.
+                </p>
 
-              {/* LIVE DATABASE & SYSTEM TELEMETRY PILLS */}
-              <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* LIVE DATABASE & SYSTEM TELEMETRY PILLS */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span
                   style={{
                     fontSize: '11px',
@@ -1449,6 +1451,7 @@ function App() {
             </div>
           </div>
         </div>
+      </div>
 
         {/* AI DECISION-SUPPORT HUB (3 GLASS CARDS) */}
         <div style={{
