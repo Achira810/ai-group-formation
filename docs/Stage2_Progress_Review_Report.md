@@ -210,7 +210,7 @@ Where:
 ## 7. 📸 Screenshots & Partial Implementation Outputs
 
 ### 7.1 Web Dashboard & Student Management Interface
-![KDU AI Group Formation Dashboard](docs/images/dashboard-screenshot.png)
+![KDU AI Group Formation Dashboard](images/01-hero-suite-overview.png)
 
 ### 7.2 Key System Implementation Metrics
 - **Live Server**: Hosted on Vercel at `http://localhost:5173/` (Live Production URL ready).

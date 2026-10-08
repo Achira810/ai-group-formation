@@ -61,11 +61,13 @@
         .hero-img-wrapper {
           position: relative;
           width: 100%;
-          height: 240px;
+          min-height: 240px;
           overflow: hidden;
         }
 
         .hero-img {
+          position: absolute;
+          inset: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -73,13 +75,14 @@
         }
 
         .hero-overlay {
-          position: absolute;
-          inset: 0;
+          position: relative;
+          z-index: 1;
           background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.65) 50%, rgba(15, 23, 42, 0.4) 100%);
           display: flex;
           flex-direction: column;
           justify-content: center;
           padding: 32px 40px;
+          min-height: 240px;
         }
 
         .hero-badge {
