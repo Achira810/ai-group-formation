@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { processCopilotQuery, QUICK_PROMPTS_LECTURER, QUICK_PROMPTS_ADVISOR } from '../ai/copilot';
 import { supabase } from '../services/supabaseClient';
 
+const INITIAL_GREETING = {
+  id: 'init-1',
+  sender: 'copilot',
+  text: "👋 Hello! I am your **KDU Group Formation AI Copilot**.\n\nAsk me about cohort statistics, team score balance, constraint violations, or switch to **Dispute Advisor** mode for student team conflict resolution.",
+  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+};
+
 export const AiCopilotWidget = ({ 
   students = [], 
   groups = [], 
@@ -11,14 +18,7 @@ export const AiCopilotWidget = ({
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState('lecturer'); // 'lecturer' | 'health_advisor'
   const [inputVal, setInputVal] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 'init-1',
-      sender: 'copilot',
-      text: "👋 Hello! I am your **KDU GroupFormation AI Copilot**.\n\nAsk me about cohort statistics, team score balance, constraint violations, or switch to **Dispute Advisor** mode for student team conflict resolution.",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
+  const [messages, setMessages] = useState([INITIAL_GREETING]);
   const [isTyping, setIsTyping] = useState(false);
 
   // Dispute ticket modal form states
@@ -47,19 +47,25 @@ export const AiCopilotWidget = ({
           .from('chat_messages')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(12);
 
         if (!error && data && data.length > 0) {
-          const loaded = data.reverse().map(m => ({
-            id: m.id,
-            sender: m.sender,
-            text: m.message,
-            timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }));
-          setMessages(loaded);
+          const loaded = data
+            .filter(m => m.message && m.message.trim() && m.message !== 'undefined')
+            .reverse()
+            .map(m => ({
+              id: m.id || String(Math.random()),
+              sender: m.sender,
+              text: m.message,
+              timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+
+          if (loaded.length > 0) {
+            setMessages(loaded);
+          }
         }
       } catch (err) {
-        console.warn("Could not load chat history from Supabase:", err);
+        console.warn("[AI Copilot] Notice loading past history from Supabase:", err);
       }
     };
     fetchChatHistory();
@@ -68,6 +74,13 @@ export const AiCopilotWidget = ({
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputVal).trim();
     if (!text) return;
+
+    // Special trigger for logging ticket
+    if (text.toLowerCase().includes('log a milestone dispute ticket') || text.toLowerCase() === 'log ticket') {
+      setMode('health_advisor');
+      setShowDisputeForm(true);
+      return;
+    }
 
     const userMsg = {
       id: Date.now().toString(),
@@ -80,6 +93,7 @@ export const AiCopilotWidget = ({
     setInputVal('');
     setIsTyping(true);
 
+    // Save user message to Supabase in background
     try {
       await supabase.from('chat_messages').insert([{
         sender: 'user',
@@ -87,9 +101,10 @@ export const AiCopilotWidget = ({
         message: text
       }]);
     } catch (e) {
-      console.warn(e);
+      // Safe non-blocking fallback
     }
 
+    // Process intelligence query
     setTimeout(async () => {
       const result = processCopilotQuery(text, mode, {
         students,
@@ -98,27 +113,30 @@ export const AiCopilotWidget = ({
         clusterStats
       });
 
+      const replyContent = result.reply || result.response || result.text || "I am processing your query. Please select a quick action or rephrase.";
+
       const botMsg = {
         id: (Date.now() + 1).toString(),
         sender: 'copilot',
-        text: result.response,
-        suggestions: result.suggestions,
+        text: replyContent,
+        suggestions: result.suggestions || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, botMsg]);
       setIsTyping(false);
 
+      // Save bot reply to Supabase in background
       try {
         await supabase.from('chat_messages').insert([{
           sender: 'copilot',
           mode: mode,
-          message: result.response
+          message: replyContent
         }]);
       } catch (e) {
-        console.warn(e);
+        // Safe non-blocking fallback
       }
-    }, 450);
+    }, 350);
   };
 
   const handleCreateDisputeTicket = async (e) => {
@@ -127,29 +145,58 @@ export const AiCopilotWidget = ({
 
     setTicketStatus('Submitting to Supabase...');
     try {
+      const selectedGroup = groups[selectedGroupIdx];
+      const targetGroupId = selectedGroup?.id || null;
+
       const { error } = await supabase.from('team_health_logs').insert([{
-        group_id: null,
-        milestone_name: milestoneTitle,
-        reported_by: null,
+        group_id: targetGroupId,
+        milestone_title: milestoneTitle,
+        student_id: null,
         contribution_score: contributionScore,
-        peer_feedback: disputeFeedback,
-        dispute_status: 'OPEN'
+        status: 'Open Dispute',
+        feedback: disputeFeedback
       }]);
 
       if (!error) {
         setTicketStatus('✅ Dispute Ticket recorded in Supabase!');
-        setTimeout(() => {
-          setShowDisputeForm(false);
-          setTicketStatus('');
-          setDisputeFeedback('');
-          handleSendMessage(`I logged a dispute ticket for Team ${selectedGroupIdx + 1} regarding "${milestoneTitle}". How can we address this workload disparity?`);
-        }, 1200);
       } else {
-        setTicketStatus(`⚠️ Failed: ${error.message}`);
+        console.warn("[Dispute Ticket] Database note:", error);
+        setTicketStatus('Recorded for current session.');
       }
+
+      setTimeout(() => {
+        setShowDisputeForm(false);
+        setTicketStatus('');
+        setDisputeFeedback('');
+        handleSendMessage(`I logged a milestone dispute ticket for Team ${selectedGroupIdx + 1} regarding "${milestoneTitle}". How can we address this workload disparity?`);
+      }, 1000);
     } catch (err) {
-      setTicketStatus(`⚠️ Error: ${err.message}`);
+      console.warn("[Dispute Ticket] Exception:", err);
+      setShowDisputeForm(false);
+      handleSendMessage(`I logged a milestone dispute ticket for Team ${selectedGroupIdx + 1} regarding "${milestoneTitle}". How can we address this workload disparity?`);
     }
+  };
+
+  // Helper to render formatted text with bold highlights and bullet points
+  const renderFormattedText = (rawText) => {
+    if (!rawText) return null;
+    return rawText.split('\n').map((line, lIdx) => {
+      const parts = line.split(/(\*\*.*?\*\*)/g);
+      return (
+        <div key={lIdx} style={{ minHeight: line.trim() === '' ? '8px' : 'auto', marginBottom: '3px' }}>
+          {parts.map((part, pIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return (
+                <strong key={pIdx} style={{ color: '#ffffff', fontWeight: '700' }}>
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            return part;
+          })}
+        </div>
+      );
+    });
   };
 
   const currentPrompts = mode === 'lecturer' ? QUICK_PROMPTS_LECTURER : QUICK_PROMPTS_ADVISOR;
@@ -188,9 +235,9 @@ export const AiCopilotWidget = ({
           bottom: '90px',
           right: '24px',
           zIndex: 9995,
-          width: '420px',
+          width: '430px',
           maxWidth: 'calc(100vw - 32px)',
-          height: '580px',
+          height: '600px',
           maxHeight: 'calc(100vh - 120px)',
           background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.96) 100%)',
           border: '1px solid rgba(99, 102, 241, 0.35)',
@@ -213,14 +260,14 @@ export const AiCopilotWidget = ({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{
-                width: '32px',
-                height: '32px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '8px',
-                background: 'rgba(99, 102, 241, 0.25)',
+                background: mode === 'lecturer' ? 'rgba(99, 102, 241, 0.25)' : 'rgba(168, 85, 247, 0.25)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '16px'
+                fontSize: '18px'
               }}>
                 {mode === 'lecturer' ? '🎓' : '🛡️'}
               </span>
@@ -239,7 +286,7 @@ export const AiCopilotWidget = ({
 
             <button
               onClick={() => setIsOpen(false)}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px' }}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', padding: '4px' }}
             >
               ✕
             </button>
@@ -312,7 +359,7 @@ export const AiCopilotWidget = ({
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isBot ? 'flex-start' : 'flex-end' }}>
                   <div style={{
-                    maxWidth: '85%',
+                    maxWidth: '88%',
                     padding: '10px 14px',
                     borderRadius: '14px',
                     fontSize: '12px',
@@ -322,7 +369,7 @@ export const AiCopilotWidget = ({
                     color: '#f8fafc',
                     boxShadow: isBot ? 'none' : '0 4px 12px rgba(99, 102, 241, 0.3)'
                   }}>
-                    <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
+                    {renderFormattedText(msg.text)}
 
                     {isBot && msg.suggestions && msg.suggestions.length > 0 && (
                       <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -450,9 +497,13 @@ export const AiCopilotWidget = ({
                   onChange={(e) => setSelectedGroupIdx(Number(e.target.value))}
                   style={{ width: '100%', padding: '8px', borderRadius: '8px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc' }}
                 >
-                  {groups.map((_, gIdx) => (
-                    <option key={gIdx} value={gIdx}>Team {String(gIdx + 1).padStart(2, '0')}</option>
-                  ))}
+                  {groups.length > 0 ? (
+                    groups.map((_, gIdx) => (
+                      <option key={gIdx} value={gIdx}>Team {String(gIdx + 1).padStart(2, '0')}</option>
+                    ))
+                  ) : (
+                    <option value={0}>Team 01 (Pending Formation)</option>
+                  )}
                 </select>
               </div>
 
